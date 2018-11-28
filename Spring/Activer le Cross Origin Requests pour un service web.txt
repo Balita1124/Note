@@ -1,0 +1,132 @@
+Dependences
+===============================
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+	</dependency>
+</dependencies>
+
+Données en entrée
+========================================
+
+{
+    "id": 1,
+    "content": "Hello, World!"
+}
+
+Enite Greeting
+========================================
+
+package hello;
+
+public class Greeting {
+
+    private final long id;
+    private final String content;
+
+    public Greeting() {
+        this.id = -1;
+        this.content = "";
+    }
+
+    public Greeting(long id, String content) {
+        this.id = id;
+        this.content = content;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+}
+
+Controller
+===========================================
+
+package hello;
+
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class GreetingController {
+
+    private static final String template = "Hello, %s!";
+    private final AtomicLong counter = new AtomicLong();
+
+    @GetMapping("/greeting")
+    public Greeting greeting(@RequestParam(required=false, defaultValue="World") String name) {
+        System.out.println("==== in greeting ====");
+        return new Greeting(counter.incrementAndGet(), String.format(template, name));
+    }
+
+}
+
+Activer le cross Origins
+================================================
+
+@CrossOrigin(origins = "http://localhost:9000")
+@GetMapping("/greeting")
+public Greeting greeting(@RequestParam(required=false, defaultValue="World") String name) {
+	System.out.println("==== in greeting ====");
+	return new Greeting(counter.incrementAndGet(), String.format(template, name));
+}
+
+Explication:
+
+Les attribues disponibles sont: origins, methods, allowedHeaders, exposedHeaders, allowCredentials or maxAge
+
+Soit on utilise une configuration globale
+===================================================
+//src/main/java/hello/GreetingController.java
+
+@GetMapping("/greeting-javaconfig")
+public Greeting greetingWithJavaconfig(@RequestParam(required=false, defaultValue="World") String name) {
+	System.out.println("==== in greeting ====");
+	return new Greeting(counter.incrementAndGet(), String.format(template, name));
+}
+
+//src/main/java/hello/Application.java
+
+@Bean
+public WebMvcConfigurer corsConfigurer() {
+	return new WebMvcConfigurerAdapter() {
+		@Override
+		public void addCorsMappings(CorsRegistry registry) {
+			registry.addMapping("/greeting-javaconfig").allowedOrigins("http://localhost:9000");
+		}
+	};
+}
+
+Rendre l'application executable 
+====================================================
+
+package hello;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+
+
+

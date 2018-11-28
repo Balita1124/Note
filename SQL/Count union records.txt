@@ -1,0 +1,11 @@
+SELECT COUNT(*)
+FROM
+(
+    select distinct profile_id 
+    from userprofile_...
+
+    union all
+
+    select distinct profile_id 
+    from productions_...
+) x

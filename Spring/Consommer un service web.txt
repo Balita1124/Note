@@ -1,0 +1,173 @@
+Dependences
+======================================
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-web</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-databind</artifactId>
+	</dependency>
+</dependencies>
+
+json en entrée
+===========================================
+{
+   type: "success",
+   value: {
+      id: 10,
+      quote: "Really loving Spring Boot, makes stand alone Spring apps easy."
+   }
+}
+
+
+Entite Quote
+=========================================
+
+package hello;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)  //Ignorer les proprietes inconnues
+public class Quote {
+
+    private String type;
+    private Value value;
+
+    public Quote() {
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Value getValue() {
+        return value;
+    }
+
+    public void setValue(Value value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "Quote{" +
+                "type='" + type + '\'' +
+                ", value=" + value +
+                '}';
+    }
+}
+
+Entite Value
+=========================================
+
+package hello;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Value {
+
+    private Long id;
+    private String quote;
+
+    public Value() {
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public String getQuote() {
+        return this.quote;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setQuote(String quote) {
+        this.quote = quote;
+    }
+
+    @Override
+    public String toString() {
+        return "Value{" +
+                "id=" + id +
+                ", quote='" + quote + '\'' +
+                '}';
+    }
+}
+
+rendre l'application executable
+=============================================================
+
+package hello;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.client.RestTemplate;
+
+public class Application {
+
+    private static final Logger log = LoggerFactory.getLogger(Application.class);
+
+    public static void main(String args[]) {
+        RestTemplate restTemplate = new RestTemplate();
+        Quote quote = restTemplate.getForObject("http://gturnquist-quoters.cfapps.io/api/random", Quote.class);
+        log.info(quote.toString());
+    }
+
+}
+
+Gerer le cycle de vie de l'application en utilisant spring boot
+===============================================================
+
+package hello;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
+
+@SpringBootApplication
+public class Application {
+
+	private static final Logger log = LoggerFactory.getLogger(Application.class);
+
+	public static void main(String args[]) {
+		SpringApplication.run(Application.class);
+	}
+
+	@Bean
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		return builder.build();
+	}
+
+	@Bean
+	public CommandLineRunner run(RestTemplate restTemplate) throws Exception {
+		return args -> {
+			Quote quote = restTemplate.getForObject(
+					"http://gturnquist-quoters.cfapps.io/api/random", Quote.class);
+			log.info(quote.toString());
+		};
+	}
+}
+
+

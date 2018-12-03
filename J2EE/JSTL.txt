@@ -1,0 +1,32 @@
+Inclusion du jstl dans le fichier jsp
+=======================================
+	- le core tag:	 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+	- le tag de mise en forme: <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+	- le tag sql : <%@ taglib prefix="sql" uri="http://java.sun.com/jsp/jstl/sql" %>
+	- le tag xml: <%@ taglib prefix="x" uri="http://java.sun.com/jsp/jstl/xml" %>
+	
+Afficher une variable en jstl
+=============================
+<c:out value="${test}" escapeXml="false" />
+<c:out value="${10*3}" />
+<c:out value="${param.color}" />
+<c:out value="${param.partnerAge}">Unknown age</c:out>     --- Avec valeur par defaut
+<c:out value="${testit}" default="Default Value" />   --- Avec valeur par defaut
+1 + 2 + 3 = <c:out value="${1 + 2 + 3}" />    --- calcul avec jstl
+
+Boucle en jstl
+=================================
+<c:forEach begin="0" end="10" varStatus="loop">
+    Index: ${loop.index}<br/>
+</c:forEach>
+
+<c:forEach items="${authors}" var="current">
+	<tr>
+	  <td><c:out value="${current.name}" /><td>
+	  <td><c:out value="${current.id}" /><td>
+	</tr>
+</c:forEach>
+
+
+pour plus d''information : http://www.java2s.com/Tutorial/Java/0380__JSTL/Catalog0380__JSTL.htm
+

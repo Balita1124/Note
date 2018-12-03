@@ -1,0 +1,78 @@
+Créer un projet maven
+======================================
+mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.mycompany.app -DartifactId=my-app
+
+Compiler un projet maven
+========================================
+mvn compile
+
+Lancer le test unitaire avec maven
+========================================
+mvn test
+
+Compiler le test source sans le compiler
+========================================
+
+mvn test-compile
+
+Installer un jar et l'installer localement
+===========================================
+mvn package
+
+Effacer le build precedant (Effacer le repertoire target)
+=========================================================
+mvn clean
+
+Copier une ressources
+=============================
+mvn process-resources
+
+Depot distant de maven
+==========================================
+Par defaut, le depot distant de maven est: http://repo.maven.apache.org/maven2/
+
+Ajouter une dependence externe
+===========================================
+les champs requis:
+	- artifactId
+	- groupId
+	- version
+	- scope: compile, test, runtime
+	
+Ex: Pour la librairie log4j
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.12</version>
+      <scope>compile</scope>
+    </dependency>
+
+Creer un application web avec maven
+=====================================================================
+mvn archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-webapp -DgroupId=com.mycompany.app -DartifactId=my-webapp
+
+Builder un projet en mode offline
+=======================================
+ mvn -o package
+ 
+Utiliser un depot interne
+=========================================================
+<project>
+  ...
+  <repositories>
+    <repository>
+      <id>my-internal-site</id>
+      <url>http://myserver/repo</url>
+    </repository>
+  </repositories>
+  ...
+</project>
+
+
+Ex: pour utilser un depot local : file:// URL
+
+Installer un librairie a partir d'un jar
+============================================================
+mvn install:install-file -Dfile=<path-to-file> -DgroupId=<group-id> -DartifactId=<artifact-id> -Dversion=<version> -Dpackaging=<packaging>
+	

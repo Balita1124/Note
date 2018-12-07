@@ -1,0 +1,7 @@
+GC overhead limit exceeded with Apache POI
+=================================================
+
+Apache POI est tres gourmand en memoire, donc l'insuffisance de memoire est une erreur frequente quand on travail sur des grandes fichiers excel
+
+une des solutions et d'augmenter le -Xmx
+

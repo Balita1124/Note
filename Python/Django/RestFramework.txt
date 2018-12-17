@@ -1,0 +1,19 @@
+1 - Install
+========================
+
+$ pip install djangorestframework
+$ pip freeze > requirements.txt
+
+Update settings.py:
+=======================================
+
+ INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'talk',
+    'rest_framework'
+)

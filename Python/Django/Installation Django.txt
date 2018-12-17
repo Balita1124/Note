@@ -1,0 +1,132 @@
+1 - installation
+=================================
+pip install django
+
+2 - Verification de l'installation
+======================================
+>>> import django
+>>> print(django.get_version())
+2.1
+
+ou
+
+
+python -m django --version
+
+3- Creation d'un projet
+=======================================
+
+django-admin startproject mysite
+
+4 - Lancer un serveur
+=======================================
+
+python manage.py runserver
+
+ou
+
+python manage.py runserver 8080
+
+python manage.py runserver 0:8000
+
+5 - Creation d'une application
+========================================
+
+python manage.py startapp polls
+
+6 - Creation de la premiere vue
+============================================
+
+polls/views.py
+---------------
+
+from django.http import HttpResponse
+
+
+def index(request):
+    return HttpResponse("Hello, world. You're at the polls index.")
+	
+polls/urls.py
+---------------
+
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+]
+
+polls/urls.py
+---------------
+
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('polls/', include('polls.urls')),
+    path('admin/', admin.site.urls),
+]
+
+
+7 - Creation des modeles
+================================
+
+from django.db import models
+
+
+class Question(models.Model):
+    question_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField('date published')
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    choice_text = models.CharField(max_length=200)
+    votes = models.IntegerField(default=0)
+	
+8 - Activer une application django dans un projet
+===================================================
+Ajouter l'application dans monsite/settings.py
+
+INSTALLED_APPS = [
+    'polls.apps.PollsConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+9 - creer une migration (Appliquer le chqngement effectue sur une modele)
+=============================================================================
+python manage.py makemigrations polls
+
+10 - Consulter une migration
+====================================
+
+python manage.py sqlmigrate polls 0001
+
+11 - Executer une migration
+======================================
+
+python manage.py migrate
+
+12 - Etape a suivre pour la modification d'une modele
+=======================================================
+
+
+    Modifiez les modèles (dans models.py).
+    Exécutez python manage.py makemigrations pour créer des migrations correspondant à ces changements.
+    Exécutez python manage.py migrate pour appliquer ces modifications à la base de données.
+
+12 - API
+============================
+python manage.py shell
+
+Creation d'un utilisateur administrateur
+=========================================
+python manage.py createsuperuser
+
+

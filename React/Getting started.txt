@@ -1,0 +1,15 @@
+Installation de expo-cli
+==================================
+
+npm install -g expo-cli
+
+Creation d'un nouveau projet
+=================================
+
+expo init AwesomeProject
+
+Lancement du serveur
+=================================
+
+cd AwesomeProject
+npm start

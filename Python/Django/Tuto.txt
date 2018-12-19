@@ -1,0 +1,11 @@
+https://doc.lagout.org/programmation/Django/Django%20Design%20Patterns%20and%20Best%20Practices%20%5BRavindran%202015-03-26%5D.pdf
+
+git clone https://github.com/DjangoPatternsBook/superbook.git
+$ cd superbook
+$ pip install -r requirements.txt
+
+
+cd final
+$ python manage.py migrate
+$ python manage.py createsuperuser
+$ python manage.py runserver

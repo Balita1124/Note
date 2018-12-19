@@ -1,0 +1,18 @@
+Creation du virtual environnement
+=========================================
+
+> mkdir icecream
+> mkvirtualenv icecream-dev
+> add2virtualenv icecream
+
+Installation de Djangp
+========================================
+
+$ pip install django
+
+Creation du projet
+=======================================
+
+$ django-admin.py startproject --template=https://github.com/twoscoops/django-twoscoops-project/archive/master.zip --extension=py,rst,html icecream_project
+
+

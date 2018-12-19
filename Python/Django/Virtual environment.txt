@@ -1,0 +1,21 @@
+source https://pypi.org/project/virtualenvwrapper-win/
+
+Installation
+===================================
+
+# using pip
+pip install virtualenvwrapper-win
+
+# using easy_install
+easy_install virtualenvwrapper-win
+
+# from source
+git clone git://github.com/davidmarble/virtualenvwrapper-win.git
+cd virtualenvwrapper-win
+python setup.py install   # or pip install .
+
+
+Commande principal
+==================================
+
+mkvirtualenv [mkvirtualenv-options] [virtualenv-options] <name>

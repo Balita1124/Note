@@ -1,0 +1,5 @@
+1 - Open a file
+file = open('file.csv', 'r')
+
+2 - Read a file
+string = file.read()

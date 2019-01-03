@@ -1,0 +1,74 @@
+Installation
+----------------------------------
+$ pip install virtualenvwrapper
+
+Cration d'un virtualenv
+==========================
+mkvirtualenv [-a project_path] [-i package] [-r requirements_file] [virtualenv options] ENVNAME
+
+The -a option can be used to associate an existing project directory with the new environment.
+
+The -i option can be used to install one or more packages (by repeating the option) after the environment is created.
+
+The -r option can be used to specify a text file listing packages to be installed. The argument value is passed to pip -r to be installed.
+
+Lister les virtualenv
+=============================
+lsvirtualenv
+
+List all of the environments.
+
+Syntax:
+
+lsvirtualenv [-b] [-l] [-h]
+
+-b 	Brief mode, disables verbose output.
+-l 	Long mode, enables verbose output. Default.
+-h 	Print the help for lsvirtualenv.
+
+Afficher les details d'une venv
+================================
+showvirtualenv
+
+Show the details for a single virtualenv.
+
+Syntax:
+
+showvirtualenv [env]
+
+Supprimer un venv
+=========================================
+
+rmvirtualenv
+
+Remove an environment, in the WORKON_HOME.
+
+Syntax:
+
+rmvirtualenv ENVNAME
+
+You must use deactivate before removing the current environment.
+
+(mynewenv)$ deactivate
+$ rmvirtualenv mynewenv
+$ workon
+$
+
+Lister ou changer de venv
+==============================
+workon
+
+List or change working virtual environments
+
+Syntax:
+
+workon [(-c|--cd)|(-n|--no-cd)] [environment_name|"."]
+
+If no environment_name is given the list of available environments is printed to stdout.
+
+If -c or --cd is specified the working directory is changed to the project directory during the post-activate phase, regardless of the value of VIRTUALENVWRAPPER_WORKON_CD.
+
+If -n or --no-cd is specified the working directory is not changed to the project directory during the post-activate phase, regardless of the value of VIRTUALENVWRAPPER_WORKON_CD.
+
+If "." is passed as the environment name, the name is derived from the base name of the current working directory (contributed by Matias Saguir).
+

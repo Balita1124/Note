@@ -1,0 +1,371 @@
+1 - installation d'un virtual environnement  (my_env)
+2 - installation de django 1.8 dans le virtualenv
+	pip install Django==1.8.6
+3 - Creation du projet
+	django-admin startproject mysite
+4 - Migration du projet
+	python manage.py migrate
+5 - Lancer le serveur de developpement
+	python manage.py runserver
+	python manage.py runserver 127.0.0.1:8001 --settings=mysite.settings
+6 - Cretion de l'application
+	python manage.py startapp blog
+7 - Creation du model Post
+	#model.py
+	from django.db import models
+	from django.utils import timezone
+	from django.contrib.auth.models import User
+	class Post(models.Model):
+		STATUS_CHOICES = (
+		('draft', 'Draft'),
+		('published', 'Published'),
+		)
+		title = models.CharField(max_length=250)
+		slug = models.SlugField(max_length=250,
+		unique_for_date='publish')
+		author = models.ForeignKey(User, related_name='blog_posts')
+		body = models.TextField()
+		publish = models.DateTimeField(default=timezone.now)
+		created = models.DateTimeField(auto_now_add=True)
+		updated = models.DateTimeField(auto_now=True)
+		status = models.CharField(max_length=10,
+		choices=STATUS_CHOICES,
+		default='draft')
+		class Meta:
+			ordering = ('-publish',)
+		def __str__(self):
+			return self.title
+			
+8 - Installation du module pytz pour gerer les timezone
+	pip install pytz
+	
+9 - Activation de l'application
+Ajouter le nom de l'application dans la section INSTALLED_APPS du settings
+
+#settings.py
+...
+
+INSTALLED_APPS = (
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'blog',
+)
+...
+
+10 - Creation et application d'une migration
+
+	python manage.py makemigrations blog	# Creation d'une migration
+	python manage.py sqlmigrate blog 0001	# Inspection d'une migration
+	python manage.py migrate				# Application d'une migration
+	
+11 - Creation d'un site d'adminnistration pour les models
+	11-1- Creation d'un super utilisateur
+		python manage.py createsuperuser
+	11-2- Ajouter le model dans le site d'administration
+		#blog/admin.py
+		from django.contrib import admin
+		from .models import Post
+		admin.site.register(Post)
+	11-3- Personnaliser l'affichage des champs dans l'interface d'administration
+		from django.contrib import admin
+		from .models import Post
+		class PostAdmin(admin.ModelAdmin):
+			list_display = ('title', 'slug', 'author', 'publish', 'status')
+		admin.site.register(Post, PostAdmin)
+	11-4- Plusieurs options de customization
+	
+		list_filter = ('status', 'created', 'publish', 'author')
+		search_fields = ('title', 'body')
+		prepopulated_fields = {'slug': ('title',)}
+		raw_id_fields = ('author',)
+		date_hierarchy = 'publish'
+		ordering = ['status', 'publish']
+12 - Travailler avec QuerySet et managers
+	python manage.py shell
+	12-1- Creation d'un objet
+		>>> from django.contrib.auth.models import User
+		>>> from blog.models import Post
+		>>> user = User.objects.get(username='admin')
+		>>> Post.objects.create(title='One more post',slug='one-more-post',	body='Post body.',	author=user)
+		>>> post.save()
+	12-2- Modifier un objet
+		>>> post.title = 'New title'
+		>>> post.save()
+	12-3- Recuperer les objets
+		>>> all_posts = Post.objects.all()
+	12-4- Recuperation avec un filtre
+		Post.objects.filter(publish__year=2015)
+		Post.objects.filter(publish__year=2015, author__username='admin')
+		Post.objects.filter(publish__year=2015) filter(author__username='admin')
+	12-5-Recuperation avec un exclude
+		Post.objects.filter(publish__year=2015).exclude(title__startswith='Why')
+	12-5-Recuperation avec un order by
+		Post.objects.order_by('title')		#asc
+		Post.objects.order_by('-title')		#desc
+	12-6-Suppression d'un objet
+		post = Post.objects.get(id=1)
+		post.delete()
+	12-7-Creer le manager d'un Model
+		#model.py
+		class PublishedManager(models.Manager):
+			def get_queryset(self):
+				return super(PublishedManager, self).get_queryset().filter(status='published')
+		
+		class Post(models.Model):
+			# ...
+			objects = models.Manager() # The default manager.
+			published = PublishedManager() # Our custom manager.
+	12-8- Utilisation d'un manager
+		Post.published.filter(title__startswith='Who')
+		
+13 - Creation des vues
+	#views.py
+	13-1- Creation de la vue liste
+		def post_list(request):
+			posts = Post.published.all()
+			return render(request,
+			'blog/post/list.html',
+			{'posts': posts})
+			
+	13-2- Creation de la vue detail
+	
+		from django.shortcuts import render, get_object_or_404
+		from .models import Post
+		
+		def post_detail(request, year, month, day, post):
+			post = get_object_or_404(Post, slug=post,status='published', publish__year=year, publish__month=month,publish__day=day)
+			return render(request, 'blog/post/detail.html',	{'post': post})
+14 - Ajout des urls patterns
+	14-1- Ajouter un fichier urls.py dans blog
+		#blog/urls.py
+		from django.conf.urls import url
+		from . import views
+		urlpatterns = [
+			# post views
+			url(r'^$', views.post_list, name='post_list'),
+			url(r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/'r'(?P<post>[-\w]+)/$',views.post_detail,name='post_detail'),
+		]
+	14-2- inclure l'url de blog dans le projet
+		#mysite/urls.py
+		from django.conf.urls import include, url
+		from django.contrib import admin
+		urlpatterns = [
+			url(r'^admin/', include(admin.site.urls)),
+			url(r'^blog/', include('blog.urls', namespace='blog',app_name='blog')),
+		]
+	14-3- Creation d'un url canonique
+		#models.py
+		from django.core.urlresolvers import reverse
+		Class Post(models.Model):
+			# ...
+			def get_absolute_url(self):
+				return reverse('blog:post_detail',
+					args=[self.publish.year,
+					self.publish.strftime('%m'),
+					self.publish.strftime('%d'),
+				self.slug])
+15 - Creation des templates pour les vues
+	15-1- Creation de base.html
+		#blog/templates/blog/base.html
+		{% load staticfiles %}
+		<!DOCTYPE html>
+		<html>
+			<head>
+			<title>{% block title %}{% endblock %}</title>
+			<link href="{% static "css/blog.css" %}" rel="stylesheet">
+			</head>
+			<body>
+				<div id="content">
+					{% block content %}
+					{% endblock %}
+				</div>
+				<div id="sidebar">
+					<h2>My blog</h2>
+					<p>This is my blog.</p>
+				</div>
+			</body>
+		</html>
+	15-2- Creation de list.html
+		{% extends "blog/base.html" %}
+		{% block title %}My Blog{% endblock %}
+		{% block content %}
+			<h1>My Blog</h1>
+			{% for post in posts %}
+			<h2>
+				<a href="{{ post.get_absolute_url }}">
+				{{ post.title }}
+				</a>
+			</h2>
+			<p class="date">
+				Published {{ post.publish }} by {{ post.author }}
+			</p>
+			{{ post.body|truncatewords:30|linebreaks }}
+			{% endfor %}
+		{% endblock %}
+	15-3- Creation de detail.html
+		{% extends "blog/base.html" %}
+			{% block title %}{{ post.title }}{% endblock %}
+			{% block content %}
+			<h1>{{ post.title }}</h1>
+			<p class="date">
+			Published {{ post.publish }} by {{ post.author }}
+			</p>
+			{{ post.body|linebreaks }}
+		{% endblock %}
+		
+16 - Ajouter une pagination
+	16-1- Creation de la vue liste
+		from django.core.paginator import Paginator, EmptyPage,\
+		PageNotAnInteger
+		def post_list(request):
+			object_list = Post.published.all()
+			paginator = Paginator(object_list, 3) # 3 posts in each page
+			page = request.GET.get('page')
+			try:
+				posts = paginator.page(page)
+			except PageNotAnInteger:
+			# If page is not an integer deliver the first page
+				posts = paginator.page(1)
+			except EmptyPage:
+			# If page is out of range deliver last page of results
+				posts = paginator.page(paginator.num_pages)
+			return render(request,
+			'blog/post/list.html',
+			{'page': page,
+			'posts': posts})
+		
+	16-2-Creation de la template templates/pagination html
+		<div class="pagination">
+			<span class="step-links">
+				{% if page.has_previous %}
+					<a href="?page={{ page.previous_page_number }}">Previous</a>
+				{% endif %}
+				<span class="current">
+					Page {{ page.number }} of {{ page.paginator.num_pages }}.
+				</span>
+				{% if page.has_next %}
+					<a href="?page={{ page.next_page_number }}">Next</a>
+				{% endif %}
+			</span>
+		</div>
+	16-3-inclusion de templates/pagination html dans la liste 
+		{% block content %}
+			...
+			{% include "pagination.html" with page=posts %}
+		{% endblock %}
+17 - Utilser un class based vues
+	17-1-Creation de la classe dans views.py
+		from django.views.generic import ListView
+		class PostListView(ListView):
+			queryset = Post.published.all()
+			context_object_name = 'posts'
+			paginate_by = 3
+			template_name = 'blog/post/list.html'
+	17-2-Creation de l'url
+		urlpatterns = [
+			# post views
+			# url(r'^$', views.post_list, name='post_list'),
+			url(r'^$', views.PostListView.as_view(), name='post_list'),
+			url(r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\d{2})/'r'(?P<post>[-\w]+)/$',
+			views.post_detail,
+			name='post_detail'),
+		]
+	17-3-Parametrage du pagination
+		il faut utiliser l'objet "page_object" car ListView utilise ce variable pour passer la page
+		{% include "pagination.html" with page=page_obj %}
+		
+18 - Creation d'une forme avec django
+	18-1- Creer un fichier forms.py dans le repertoire blog
+	18-2- Creation de la classe form pour poster les commentaire
+		from django import forms
+		class EmailPostForm(forms.Form):
+			name = forms.CharField(max_length=25)
+			email = forms.EmailField()
+			to = forms.EmailField()
+			comments = forms.CharField(required=False,	widget=forms.Textarea)
+	18-3- gerer une formulaire a partir d'une vue
+		from .forms import EmailPostForm
+		def post_share(request, post_id):
+			# Retrieve post by id
+			post = get_object_or_404(Post, id=post_id, status='published')
+			if request.method == 'POST':
+				# Form was submitted
+				form = EmailPostForm(request.POST)
+				if form.is_valid():
+					# Form fields passed validation
+					cd = form.cleaned_data
+					# ... send email
+			else:
+				form = EmailPostForm()
+			return render(request, 'blog/post/share.html', {'post': post,
+			'form': form})
+	18-4-
+	
+19 - Envoyer un email avec django
+	19-1- Configurer le parametre des emails
+		#settings.py
+		EMAIL_HOST = 'smtp.gmail.com'
+		EMAIL_HOST_USER = 'your_account@gmail.com'
+		EMAIL_HOST_PASSWORD = 'your_password'
+		EMAIL_PORT = 587
+		EMAIL_USE_TLS = True
+		
+	19-2- Tester un email
+		- ouvrir le shell avec python manage.py shell
+		>>> from django.core.mail import send_mail
+		>>> send_mail('Django mail', 'This e-mail was sent with Django.','your_account@gmail.com', ['your_account@gmail.com'], fail_silently=False)
+		
+	19-3- Ajouter l'envoi des mails dans la vue precedente
+		from django.core.mail import send_mail
+		def post_share(request, post_id):
+			# Retrieve post by id
+			post = get_object_or_404(Post, id=post_id, status='published')
+			sent = False
+			if request.method == 'POST':
+				# Form was submitted
+				form = EmailPostForm(request.POST)
+				if form.is_valid():
+				# Form fields passed validation
+					cd = form.cleaned_data
+					post_url = request.build_absolute_uri(
+					post.get_absolute_url())
+					subject = '{} ({}) recommends you reading "{}"'.
+					format(cd['name'], cd['email'], post.title)
+					message = 'Read "{}" at {}\n\n{}\'s comments: {}'.
+					format(post.title, post_url, cd['name'], cd['comments'])
+					send_mail(subject, message, 'admin@myblog.com',
+					[cd['to']])
+					sent = True
+			else:
+				form = EmailPostForm()
+			return render(request, 'blog/post/share.html', {'post': post,'form': form,'sent': sent})
+	19-4- Ajout de l'url
+		urlpatterns = [
+			# ...
+			url(r'^(?P<post_id>\d+)/share/$', views.post_share,
+			name='post_share'),
+		]
+20 - Afficher un form dans un template
+		{% extends "blog/base.html" %}
+		{% block title %}Share a post{% endblock %}
+		{% block content %}
+		{% if sent %}
+		<h1>E-mail successfully sent</h1>
+		<p>
+		"{{ post.title }}" was successfully sent to {{ cd.to }}.
+		</p>
+		{% else %}
+		<h1>Share "{{ post.title }}" by e-mail</h1>
+		<form action="." method="post">
+		{{ form.as_p }}
+		{% csrf_token %}
+		<input type="submit" value="Send e-mail">
+		</form>
+		{% endif %}
+		{% endblock %}
+21 - Creation d'une fonctionnalite pour les commentaires
+	21-1-Creation du modele

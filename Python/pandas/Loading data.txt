@@ -1,0 +1,21 @@
+Loading data
+===============================
+
+import pandas as pd
+
+df = pd.read_csv("filename.csv")   # on peut aussi lire des fichier excel(xlsx, xls)
+
+#L'objet retourné et de type pandas.DataFrame
+
+
+Viewing data
+==================================
+
+df.head(n=5)
+
+#Utiliser pour voir les debuts de lignes d'une dataframe, la valeur par defaut et 5
+
+df.tail(n=5)
+
+#Afficher les derniers lignes d'une dataframe, la valeur par defaut et de 5
+

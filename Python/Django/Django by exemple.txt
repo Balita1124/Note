@@ -369,3 +369,68 @@ INSTALLED_APPS = (
 		{% endblock %}
 21 - Creation d'une fonctionnalite pour les commentaires
 	21-1-Creation du modele
+		class Comment(models.Model):
+			post = models.ForeignKey(Post, related_name='comments')
+			name = models.CharField(max_length=80)
+			email = models.EmailField()
+			body = models.TextField()
+			created = models.DateTimeField(auto_now_add=True)
+			updated = models.DateTimeField(auto_now=True)
+			active = models.BooleanField(default=True)
+			
+			class Meta:
+				ordering = ('created',)
+			def __str__(self):
+				return 'Comment by {} on {}'.format(self.name, self.post)
+	21-2- Creer et appliquer la migration
+		python manage.py makemigrations blog
+		python manage.py migrate
+	21-3- Activer l'administration des commentaires
+		from .models import Post, Comment
+		class CommentAdmin(admin.ModelAdmin):
+			list_display = ('name', 'email', 'post', 'created', 'active')
+			list_filter = ('active', 'created', 'updated')
+			search_fields = ('name', 'email', 'body')
+		admin.site.register(Comment, CommentAdmin)
+	21-4- Creer le form pour les commentaires
+		#blog\forms.py
+		from .models import Comment
+		class CommentForm(forms.ModelForm):
+			class Meta:
+				model = Comment
+				fields = ('name', 'email', 'body')
+	21-5- Gerer le form dams la vue
+		from .models import Post, Comment
+		from .forms import EmailPostForm, CommentForm
+		def post_detail(request, year, month, day, post):
+						post = get_object_or_404(Post, slug=post, status='published',
+						publish__year=year,
+						publish__month=month,
+						publish__day=day
+						)
+		# List of active comments for this post
+			comments = post.comments.filter(active=True)
+			if request.method == 'POST':
+			# A comment was posted
+			comment_form = CommentForm(data=request.POST)
+			if comment_form.is_valid():
+				# Create Comment object but don't save to database yet
+				new_comment = comment_form.save(commit=False)
+				# Assign the current post to the comment
+				new_comment.post = post
+				# Save the comment to the database
+				new_comment.save()
+			else:
+				comment_form = CommentForm()
+			return render(request,
+					'blog/post/detail.html',
+					{'post': post,
+					'comments': comments,
+					'comment_form': comment_form})
+	21-6- Ajouter les commentaires dans la vue post detail
+		{% with comments.count as total_comments %}
+		<h2>
+		{{ total_comments }} comment{{ total_comments|pluralize }}
+		</h2>
+		{% endwith %}
+	

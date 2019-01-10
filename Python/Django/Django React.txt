@@ -1,0 +1,136 @@
+I - Mise en place du virtual environnemnt python et du projet
+
+1 - Creation du virtual environnement
+	$ mkvirtualenv VenvDjango
+	$ workon VenvDjango
+2 - Creation du repertoire commun
+	$ mkdir django-drf-react-quickstart
+3 - Installatin du Django
+	$ pip install django djangorestframework
+4 - Creation du projet
+	$ django-admin startproject project
+
+II - Creation de l'application
+1 - Creation de l'application leads
+	$ django-admin startapp leads
+2 - Inclure l'application dans le fichier de configuration
+	
+	INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'leads', # add the leads app
+    ]
+3 - Creation du model lead
+
+from django.db import models
+class Lead(models.Model):
+	name = models.CharField(max_length=100)
+	email = models.EmailField()
+	message = models.CharField(max_length=300)
+	created_at = models.DateTimeField(auto_now_add=True)
+	
+4 - Creation de la migration
+
+$ python manage.py makemigrations leads
+$ python manage.py migrate
+
+II - Test
+1 - Installation de coverage
+$ pip install coverage
+2 - Utilisation du coverage
+Apres chaque modification dans le code. Executer
+
+$ coverage run --source='.' manage.py test
+3 - Generer le rapport html
+$ coverage html
+$ coverage report
+
+II - Django rest serializer
+Serialization is the act of transforming an object into another data format.
+1 - Creation d'un serializer pour le model Lead
+#./leads/serializers.py
+from rest_framework import serializers
+from leads.models import Lead
+class LeadSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Lead
+		fields = ('id', 'name', 'email', 'message')
+		
+		
+On peut aussi le definir comme suivant
+
+from rest_framework import serializers
+from leads.models import Lead
+class LeadSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Lead
+		fields = '__all__'
+2 - Creation de la vue pour gerer un GET et un POST	
+#./leads/views.py
+from leads.models import Lead
+from leads.serializers import LeadSerializer
+from rest_framework import generics
+class LeadListCreate(generics.ListCreateAPIView):
+	queryset = Lead.objects.all()
+	serializer_class = LeadSerializer
+	
+3 - Creation du route
+#./project/urls.py
+from django.urls import path, include
+urlpatterns = [
+	path('', include('leads.urls')),
+]
+
+#./leads/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+	path('api/lead/', views.LeadListCreate.as_view() ),
+]
+
+4 - Activation de l'app rest_framework
+#./project/settings.py
+INSTALLED_APPS = [
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'leads', 
+	'rest_framework' # enable rest framework
+]
+
+III - Alimenter la base de données
+#./leads/fixtures/leads.json
+
+[
+	{
+		"model": "leads.lead",
+		"pk": 1,
+		"fields": {
+			"name": "Armin",
+			"email": "something@gmail.com",
+			"message": "I am looking for a Javascript mentor",
+			"created_at": "2018-02-14 00:00:00"
+		}
+	},
+	{
+		"model": "leads.lead",
+		"pk": 2,
+		"fields": {
+			"name": "Tom",
+			"email": "tomsomething@gmail.com",
+			"message": "I want to talk about a Python project",
+			"created_at": "2018-01-14 00:00:00"
+		}
+	}
+]
+
+$ python manage.py loaddata leads
+	
+

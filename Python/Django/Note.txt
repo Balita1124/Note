@@ -1,0 +1,11 @@
+Visual Studio Code Django
+============================
+
+Install pylint-django using pip as follows
+
+pip install pylint-django
+Then in Visual Studio Code goto: User Settings (Ctrl + , or File > Preferences > Settings if available ) Put in the following (please note the curly braces which are required for custom user settings in VSC):
+
+{"python.linting.pylintArgs": [
+     "--load-plugins=pylint_django"
+],}

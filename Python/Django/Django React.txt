@@ -133,4 +133,221 @@ III - Alimenter la base de données
 
 $ python manage.py loaddata leads
 	
+REACT
+-----------------
+I - Mise en place du structure react
+1 - creation de l'application django permettant de gerer react
+$ django-admin startapp frontend
+2 - Creation du repertoire pour le composant react
+$ mkdir frontend\src\components
+$ mkdir frontend\static\frontend
+$ mkdir frontend\templates\frontend
+2 - Aller dans le repertoire en dehors du projet et lancer
+cd .. pour naviguer en dehors
+$ npm init -y
+$ npm i webpack webpack-cli --save-dev
+3 - Ouvrir le package.json et configurer le script
+
+    "scripts": {
+      "dev": "webpack --mode development ./project/frontend/src/index.js --output ./project/frontend/static/frontend/main.js",
+      "build": "webpack --mode production ./project/frontend/src/index.js --output ./project/frontend/static/frontend/main.js"
+    }
+4 - Installer babel
+
+npm i @babel/core babel-loader @babel/preset-env @babel/preset-react babel-plugin-transform-class-properties --save-dev
+
+5  Pull in React and prop-types:
+
+npm i react react-dom prop-types --save-dev
+
+6 - Creer un fichier .babelrc a l'interieur du projet et ajouter le contenu suivant
+
+    {
+        "presets": [
+            "@babel/preset-env", "@babel/preset-react"
+        ],
+        "plugins": [
+            "transform-class-properties"
+        ]
+    }
+
+7 - Creer le fichier webpack.config.js pour configurer babel-loader
+
+    module.exports = {
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            use: {
+              loader: "babel-loader"
+            }
+          }
+        ]
+      }
+    };
+
+I - Le front end react
+
+1 - Creation de la vue
+
+#./frontend/views.py
+
+from django.shortcuts import render
+def index(request):
+	return render(request, 'frontend/index.html')
+	
+2 - Creation du template
+
+#/frontend/templates/frontend/index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+  <title>Django DRF - React : Quickstart - Valentino G. - www.valentinog.com</title>
+</head>
+<body>
+  <section class="section">
+	<div class="container">
+		  <div id="app" class="columns"><!-- React --></div>
+	</div>
+  </section>
+</body>
+{% load static %}
+<script src="{% static "frontend/main.js" %}"></script>
+</html>
+
+3 - Configuration de l'url
+#./project/urls.py
+    urlpatterns = [
+        path('', include('leads.urls')),
+        path('', include('frontend.urls')),
+    ]
+
+#./frontend/urls.py
+
+    from django.urls import path
+    from . import views
+    urlpatterns = [
+        path('', views.index ),
+    ]
+
+4 - Declarer l'application frontend dans settings.py
+
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'leads', 
+        'rest_framework',
+        'frontend' # enable the frontend app
+    ]
+
+5 - Mise en place de App component
+# /frontend/src/components/App.js
+
+    import React from "react";
+    import ReactDOM from "react-dom";
+    import DataProvider from "./DataProvider";
+    import Table from "./Table";
+    const App = () => (
+      <DataProvider endpoint="api/lead/" 
+                    render={data => <Table data={data} />} />
+    );
+    const wrapper = document.getElementById("app");
+    wrapper ? ReactDOM.render(<App />, wrapper) : null;
+	
+6 - Mise en place de DataProvider component
+
+#/frontend/src/components/DataProvider.js
+
+    import React, { Component } from "react";
+    import PropTypes from "prop-types";
+    class DataProvider extends Component {
+      static propTypes = {
+        endpoint: PropTypes.string.isRequired,
+        render: PropTypes.func.isRequired
+      };
+      state = {
+          data: [],
+          loaded: false,
+          placeholder: "Loading..."
+        };
+      componentDidMount() {
+        fetch(this.props.endpoint)
+          .then(response => {
+            if (response.status !== 200) {
+              return this.setState({ placeholder: "Something went wrong" });
+            }
+            return response.json();
+          })
+          .then(data => this.setState({ data: data, loaded: true }));
+      }
+      render() {
+        const { data, loaded, placeholder } = this.state;
+        return loaded ? this.props.render(data) : <p>{placeholder}</p>;
+      }
+    }
+    export default DataProvider;
+
+7 - Mise en place du Table component
+
+#/frontend/src/components/Table.js
+
+    import React from "react";
+    import PropTypes from "prop-types";
+    import key from "weak-key";
+    const Table = ({ data }) =>
+      !data.length ? (
+        <p>Nothing to show</p>
+      ) : (
+        <div className="column">
+          <h2 className="subtitle">
+            Showing <strong>{data.length} items</strong>
+          </h2>
+          <table className="table is-striped">
+            <thead>
+              <tr>
+                {Object.entries(data[0]).map(el => <th key={key(el)}>{el[0]}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map(el => (
+                <tr key={el.id}>
+                  {Object.entries(el).map(el => <td key={key(el)}>{el[1]}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    Table.propTypes = {
+      data: PropTypes.array.isRequired
+    };
+    export default Table;
+
+8 - Short id pour react
+
+$ npm i weak-key --save-dev
+
+9 - Creation du point d'entree
+
+#/frontend/src/index.js
+
+import App from "./components/App";
+
+10 - Lancer le webpack
+
+$ npm run dev
+
+11 - Lancer le serveur
+
+$ python manage.py runserver
+
 

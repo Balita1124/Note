@@ -1,0 +1,153 @@
+1 - configuration de base
+------------------------------------------
+1-1- dans application/config/config.php specifier le url de l'application:
+$config['base_url'] = 'http://localhost/codeigniter/';
+
+1-2- Configurer la base de donnees dans application/config/database.php
+
+$db['default'] = array(
+    'dsn'    => '',
+    'hostname' => 'localhost',
+    'username' => 'root',
+    'password' => 'db_pass',
+    'database' => 'codexworld',
+    'dbdriver' => 'mysqli',
+    'dbprefix' => '',
+    'pconnect' => FALSE,
+    'db_debug' => (ENVIRONMENT !== 'production'),
+    'cache_on' => FALSE,
+    'cachedir' => '',
+    'char_set' => 'utf8',
+    'dbcollat' => 'utf8_general_ci',
+    'swap_pre' => '',
+    'encrypt' => FALSE,
+    'compress' => FALSE,
+    'stricton' => FALSE,
+    'failover' => array(),
+    'save_queries' => TRUE
+);
+
+1-3- Exemple de mise en place d'une page
+
+controller (application/controllers/home_view.php)
+==================================================
+<?php 
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Home extends CI_Controller {
+    public function index()
+    {
+        $this->load->view('home_view');
+    }
+}
+?>
+routes dans application/config/routes.php
+==========================================================
+$route['default_controller'] = 'home'
+
+vues dans application/views/home_view.php
+===============================================================
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to My First CodeIgniter Application</title>
+</head>
+<body>
+
+<div id="container">
+    <h1>Welcome to My First CodeIgniter Application!</h1>
+    <div id="body">
+        <p>If you would like to edit this page you'll find it located at:</p>
+        <code>application/views/home_view.php</code>
+
+        <p>The corresponding controller for this page is found at:</p>
+        <code>application/controllers/Home.php</code>
+    </div>
+</div>
+
+</body>
+</html>
+1-4 - Persistence dans la base de donnees
+---------------------------------------------
+creation de la table
+=================================================================
+
+CREATE TABLE `images` (
+ `id` int(11) NOT NULL AUTO_INCREMENT,
+ `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+ `uploaded_on` datetime NOT NULL,
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+creation d'un dossier "uploads" pour ajouter les images uploadé
+=================================================================
+
+insertion des données dans la table image
+===============================================
+
+INSERT INTO `images` (`id`, `name`, `uploaded_on`) VALUES
+(1, 'image1.jpg', '2017-09-28 10:30:00'),
+(2, 'image2.jpg', '2017-09-28 10:30:00'),
+(3, 'image3.jpg', '2017-09-28 10:30:00'),
+(4, 'image4.jpg', '2017-09-28 10:30:00'),
+(5, 'image5.jpg', '2017-09-28 10:30:00');
+
+creation du modele dans application/models/Home_model.php
+================================================
+<?php
+class Home_model extends CI_Model {
+    public function __construct()
+    {
+        $this->load->database();
+    }
+    
+    public function get_images()
+    {
+        $query = $this->db->get('images');
+        if($query->num_rows() > 0){
+            $result = $query->result_array();
+            return $result;
+        }else{
+            return false;
+        }
+    }
+}
+?>
+Afficher les images de la base de données en modifiant application/controllers/Home.php
+========================================================================================
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Home extends CI_Controller {
+    public function __construct()
+    {
+        parent::__construct();
+        
+        //load model
+        $this->load->model('home_model');
+    }
+        
+    public function index()
+    {
+        //get data from the database
+        $data['images'] = $this->home_model->get_images();
+        
+        //load view and pass the data
+        $this->load->view('home_view', $data);
+    }
+}
+?>
+Modifier le vue pour afficher l'image application/views/home_view.php
+======================================================================
+
+<div class="gallery">
+    <ul>
+    <?php foreach($images as $img): ?>
+        <li><img src="uploads/<?php echo $img['name']; ?>" /></li>
+    <?php endforeach; ?>
+    </ul>
+</div>
+
+

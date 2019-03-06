@@ -1,0 +1,382 @@
+1 - Creation de la table
+================================================================
+CREATE TABLE `posts` (
+ `id` int(11) NOT NULL AUTO_INCREMENT,
+ `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+ `content` text COLLATE utf8_unicode_ci NOT NULL,
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+2 - Autoloader les librairies et helpers (config/autoload.php)
+================================================================
+<?php
+	//.....
+	$autoload['libraries'] = array('database', 'session');
+	$autoload['helper'] = array('url');
+	//.....
+?>
+3 - Creation du model (application/models/Post.php)
+================================================================
+
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+class Post extends CI_Model{
+    /*
+     * Get posts
+     */
+    function getRows($id = ""){
+        if(!empty($id)){
+            $query = $this->db->get_where('posts', array('id' => $id));
+            return $query->row_array();
+        }else{
+            $query = $this->db->get('posts');
+            return $query->result_array();
+        }
+    }
+    
+    /*
+     * Insert post
+     */
+    public function insert($data = array()) {
+        $insert = $this->db->insert('posts', $data);
+        if($insert){
+            return $this->db->insert_id();
+        }else{
+            return false;
+        }
+    }
+    
+    /*
+     * Update post
+     */
+    public function update($data, $id) {
+        if(!empty($data) && !empty($id)){
+            $update = $this->db->update('posts', $data, array('id'=>$id));
+            return $update?true:false;
+        }else{
+            return false;
+        }
+    }
+    
+    /*
+     * Delete post
+     */
+    public function delete($id){
+        $delete = $this->db->delete('posts',array('id'=>$id));
+        return $delete?true:false;
+    }
+}
+?>
+
+4 - Creation des controllers (application/controllers/Posts.php)
+===================================================================
+
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Posts extends CI_Controller {
+    
+    function __construct() {
+        parent::__construct();
+        $this->load->helper('form');
+        $this->load->library('form_validation');
+        $this->load->model('post');
+    }
+    
+    public function index(){
+        $data = array();
+        
+        //get messages from the session
+        if($this->session->userdata('success_msg')){
+            $data['success_msg'] = $this->session->userdata('success_msg');
+            $this->session->unset_userdata('success_msg');
+        }
+        if($this->session->userdata('error_msg')){
+            $data['error_msg'] = $this->session->userdata('error_msg');
+            $this->session->unset_userdata('error_msg');
+        }
+
+        $data['posts'] = $this->post->getRows();
+        $data['title'] = 'Post Archive';
+        
+        //load the list page view
+        $this->load->view('templates/header', $data);
+        $this->load->view('posts/index', $data);
+        $this->load->view('templates/footer');
+    }
+    
+    /*
+     * Post details
+     */
+    public function view($id){
+        $data = array();
+        
+        //check whether post id is not empty
+        if(!empty($id)){
+            $data['post'] = $this->post->getRows($id);
+            $data['title'] = $data['post']['title'];
+            
+            //load the details page view
+            $this->load->view('templates/header', $data);
+            $this->load->view('posts/view', $data);
+            $this->load->view('templates/footer');
+        }else{
+            redirect('/posts');
+        }
+    }
+    
+    /*
+     * Add post content
+     */
+    public function add(){
+        $data = array();
+        $postData = array();
+        
+        //if add request is submitted
+        if($this->input->post('postSubmit')){
+            //form field validation rules
+            $this->form_validation->set_rules('title', 'post title', 'required');
+            $this->form_validation->set_rules('content', 'post content', 'required');
+            
+            //prepare post data
+            $postData = array(
+                'title' => $this->input->post('title'),
+                'content' => $this->input->post('content')
+            );
+            
+            //validate submitted form data
+            if($this->form_validation->run() == true){
+                //insert post data
+                $insert = $this->post->insert($postData);
+
+                if($insert){
+                    $this->session->set_userdata('success_msg', 'Post has been added successfully.');
+                    redirect('/posts');
+                }else{
+                    $data['error_msg'] = 'Some problems occurred, please try again.';
+                }
+            }
+        }
+        
+        $data['post'] = $postData;
+        $data['title'] = 'Create Post';
+        $data['action'] = 'Add';
+        
+        //load the add page view
+        $this->load->view('templates/header', $data);
+        $this->load->view('posts/add-edit', $data);
+        $this->load->view('templates/footer');
+    }
+    
+    /*
+     * Update post content
+     */
+    public function edit($id){
+        $data = array();
+        
+        //get post data
+        $postData = $this->post->getRows($id);
+        
+        //if update request is submitted
+        if($this->input->post('postSubmit')){
+            //form field validation rules
+            $this->form_validation->set_rules('title', 'post title', 'required');
+            $this->form_validation->set_rules('content', 'post content', 'required');
+            
+            //prepare cms page data
+            $postData = array(
+                'title' => $this->input->post('title'),
+                'content' => $this->input->post('content')
+            );
+            
+            //validate submitted form data
+            if($this->form_validation->run() == true){
+                //update post data
+                $update = $this->post->update($postData, $id);
+
+                if($update){
+                    $this->session->set_userdata('success_msg', 'Post has been updated successfully.');
+                    redirect('/posts');
+                }else{
+                    $data['error_msg'] = 'Some problems occurred, please try again.';
+                }
+            }
+        }
+
+        
+        $data['post'] = $postData;
+        $data['title'] = 'Update Post';
+        $data['action'] = 'Edit';
+        
+        //load the edit page view
+        $this->load->view('templates/header', $data);
+        $this->load->view('posts/add-edit', $data);
+        $this->load->view('templates/footer');
+    }
+    
+    /*
+     * Delete post data
+     */
+    public function delete($id){
+        //check whether post id is not empty
+        if($id){
+            //delete post
+            $delete = $this->post->delete($id);
+            
+            if($delete){
+                $this->session->set_userdata('success_msg', 'Post has been removed successfully.');
+            }else{
+                $this->session->set_userdata('error_msg', 'Some problems occurred, please try again.');
+            }
+        }
+
+        redirect('/posts');
+    }
+}
+?>
+
+5 - Creation des vues (application/views/)
+=============================================
+templates/header.php
+------------------------
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title><?php echo $title; ?></title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+</head>
+<body>
+
+templates/footer.php
+---------------------
+</body>
+</html>
+
+posts/index.php
+----------------------
+
+<div class="container">
+    <?php if(!empty($success_msg)){ ?>
+    <div class="col-xs-12">
+        <div class="alert alert-success"><?php echo $success_msg; ?></div>
+    </div>
+    <?php }elseif(!empty($error_msg)){ ?>
+    <div class="col-xs-12">
+        <div class="alert alert-danger"><?php echo $error_msg; ?></div>
+    </div>
+    <?php } ?>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default ">
+                <div class="panel-heading">Posts <a href="<?php echo site_url('posts/add/'); ?>" class="glyphicon glyphicon-plus pull-right" ></a></div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th width="5%">ID</th>
+                            <th width="30%">Title</th>
+                            <th width="50%">Content</th>
+                            <th width="15%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userData">
+                        <?php if(!empty($posts)): foreach($posts as $post): ?>
+                        <tr>
+                            <td><?php echo '#'.$post['id']; ?></td>
+                            <td><?php echo $post['title']; ?></td>
+                            <td><?php echo (strlen($post['content'])>150)?substr($post['content'],0,150).'...':$post['content']; ?></td>
+                            <td>
+                                <a href="<?php echo site_url('posts/view/'.$post['id']); ?>" class="glyphicon glyphicon-eye-open"></a>
+                                <a href="<?php echo site_url('posts/edit/'.$post['id']); ?>" class="glyphicon glyphicon-edit"></a>
+                                <a href="<?php echo site_url('posts/delete/'.$post['id']); ?>" class="glyphicon glyphicon-trash" onclick="return confirm('Are you sure to delete?')"></a>
+                            </td>
+                        </tr>
+                        <?php endforeach; else: ?>
+                        <tr><td colspan="4">Post(s) not found......</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+posts/view.php
+-----------------------
+
+<div class="container">
+    <div class="row">
+        <div class="panel panel-default">
+            <div class="panel-heading">Post Details <a href="<?php echo site_url('posts/'); ?>" class="glyphicon glyphicon-arrow-left pull-right"></a></div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label>Title:</label>
+                    <p><?php echo !empty($post['title'])?$post['title']:''; ?></p>
+                </div>
+                <div class="form-group">
+                    <label>Content:</label>
+                    <p><?php echo !empty($post['content'])?$post['content']:''; ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+posts/add-edit.php
+---------------------------
+
+<div class="container">
+    <div class="col-xs-12">
+    <?php 
+        if(!empty($success_msg)){
+            echo '<div class="alert alert-success">'.$success_msg.'</div>';
+        }elseif(!empty($error_msg)){
+            echo '<div class="alert alert-danger">'.$error_msg.'</div>';
+        }
+    ?>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-heading"><?php echo $action; ?> Post <a href="<?php echo site_url('posts/'); ?>" class="glyphicon glyphicon-arrow-left pull-right"></a></div>
+                <div class="panel-body">
+                    <form method="post" action="" class="form">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" class="form-control" name="title" placeholder="Enter title" value="<?php echo !empty($post['title'])?$post['title']:''; ?>">
+                            <?php echo form_error('title','<p class="help-block text-danger">','</p>'); ?>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Content</label>
+                            <textarea name="content" class="form-control" placeholder="Enter post content"><?php echo !empty($post['content'])?$post['content']:''; ?></textarea>
+                            <?php echo form_error('content','<p class="text-danger">','</p>'); ?>
+                        </div>
+                        <input type="submit" name="postSubmit" class="btn btn-primary" value="Submit"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+6 - Routing (config/routes.php)
+=======================================
+<?php
+	$route['posts/view/(:num)'] = 'posts/view/$1';
+	$route['posts/add'] = 'posts/add';
+	$route['posts/edit/(:num)'] = 'posts/edit/$1';
+	$route['posts/delete/(:num)'] = 'posts/delete/$1';
+	$route['posts'] = 'posts';
+?>
+
+7 - Enlever le index.php de l'URL
+==============================================
+7 - 1 - ouvrir config/config.php
+-----------------------------
+$config['index_page'] = '';
+7 - 2 - creer un fichier .htaccess dans la racine
+--------------------------------------------------
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /codeigniter/index.php/$1 [L]
+
+NB: pour pouvoir utiliser un le .htaccess, il faut que le mode "mod_rewrite" soit activer

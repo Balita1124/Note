@@ -1,16 +1,23 @@
-Installation de expo-cli
-==================================
+Document Setup with React
+----------------------------------
 
-npm install -g expo-cli
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pure React Samples</title>
+</head>
+<body>
+<!-- Target container -->
+<div class="react-container"></div>
+<!-- React library & ReactDOM-->
+<script src="https://unpkg.com/react@15.4.2/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@15.4.2/dist/react-dom.js"></script>
+<script>
+// Pure React and JavaScript code
+</script>
+</body>
+</html>
 
-Creation d'un nouveau projet
-=================================
 
-expo init AwesomeProject
-
-Lancement du serveur
-=================================
-
-cd AwesomeProject
-npm start
 

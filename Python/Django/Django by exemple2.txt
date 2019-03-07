@@ -1,0 +1,281 @@
+1 - Mise en place
+	1-1 - installation et activation du virtualenv myenv
+	1-2 - Installation de django 1.8.6
+		pip install Django==1.8.6
+	1-3 - Creation du projet
+		django-admin startproject bookmarks
+	1-4 - Creation et activation de l'application account
+		django-admin startapp account
+		
+		#settings.py
+		INSTALLED_APPS = (
+			'account',
+			# ...
+		)
+		python manage.py migrate
+2 - Utilisation du framework d'authentification de django
+	(user authentication, sessions, permissions, and user groups)
+	(views for common user actions such as login, logout, change password, and reset password.)
+	(The authentication framework is located at django.contrib.auth)
+3 - Creation du vue login
+	3-1- Creation du login form
+		#forms.py
+		from django import forms
+		class LoginForm(forms.Form):
+			username = forms.CharField()
+			password = forms.CharField(widget=forms.PasswordInput)
+	3-2- Creation de la vue
+		#views.py
+		from django.http import HttpResponse
+		from django.shortcuts import render
+		from django.contrib.auth import authenticate, login
+		from .forms import LoginForm
+		
+		def user_login(request):
+			if request.method == 'POST':
+				form = LoginForm(request.POST)
+				if form.is_valid():
+					cd = form.cleaned_data
+					user = authenticate(username=cd['username'], password=cd['password'])
+					if user is not None:
+						if user.is_active:
+							login(request, user)
+							return HttpResponse('Authenticated '\
+							'successfully')
+						else:
+							return HttpResponse('Disabled account')
+					else:
+						return HttpResponse('Invalid login')
+			else:
+				form = LoginForm()
+			return render(request, 'account/login.html', {'form': form})
+	3-3- Parametrage de l'url
+		#account/urls.py
+		from django.conf.urls import url
+		from . import views
+		urlpatterns = [
+			# post views
+			url(r'^login/$', views.user_login, name='login'),
+		]
+		
+		#bookmarks/urls.py
+		from django.conf.urls import include, url
+		from django.contrib import admin
+		urlpatterns = [
+			url(r'^admin/', include(admin.site.urls)),
+			url(r'^account/', include('account.urls')),
+		]
+	3-4 Creation du template
+		#templates/base.html
+		{% load staticfiles %}
+		<!DOCTYPE html>
+		<html>
+		<head>
+		<title>{% block title %}{% endblock %}</title>
+		<link href="{% static "css/base.css" %}" rel="stylesheet">
+		</head>
+		<body>
+		<div id="header">
+		<span class="logo">Bookmarks</span>
+		</div>
+		<div id="content">
+		{% block content %}
+		{% endblock %}
+		</div>
+		</body>
+		</html>
+		
+		#account/login.html
+		{% extends "base.html" %}
+		{% block title %}Log-in{% endblock %}
+		{% block content %}
+			<h1>Log-in</h1>
+			<p>Please, use the following form to log-in:</p>
+			<form action="." method="post">
+				{{ form.as_p }}
+				{% csrf_token %}
+				<p><input type="submit" value="Log-in"></p>
+			</form>
+		{% endblock %}
+4 - Utiliser la vue d'authentification de django
+	4-1-login et logout vue
+		#account\urls.py
+		from django.conf.urls import url
+		from . import views
+		urlpatterns = [
+			# previous login view
+			# url(r'^login/$', views.user_login, name='login'),
+			# login / logout urls
+			url(r'^login/$', 'django.contrib.auth.views.login',	name='login'),
+			url(r'^logout/$','django.contrib.auth.views.logout',name='logout'),
+			url(r'^logout-then-login/$','django.contrib.auth.views.logout_then_login',name='logout_then_login'),
+		]
+	4-2- override du vue par defaut de l'
+		#account/registration/login.html
+		{% extends "base.html" %}
+		{% block title %}Log-in{% endblock %}
+		{% block content %}
+			<h1>Log-in</h1>
+			{% if form.errors %}
+				<p>
+				Your username and password didn't match.
+				Please try again.
+				</p>
+			{% else %}
+				<p>Please, use the following form to log-in:</p>
+			{% endif %}
+			<div class="login-form">
+			<form action="{% url 'login' %}" method="post">
+				{{ form.as_p }}
+				{% csrf_token %}
+				<input type="hidden" name="next" value="{{ next }}" />
+				<p><input type="submit" value="Log-in"></p>
+			</form>
+			</div>
+		{% endblock %}
+		#logged_out.html
+		{% extends "base.html" %}
+		{% block title %}Logged out{% endblock %}
+		{% block content %}
+		<h1>Logged out</h1>
+		<p>You have been successfully logged out. You can <a href="{% url "login" %}">log-in again</a>.</p>
+		{% endblock %}
+		
+	4-3- Creation d'un dashboard proteger par un mot de passe
+		#views.py
+		@login_required
+		def dashboard(request):
+			return render(request, 'account/dashboard.html', {'section': 'dashboard'})
+		
+		#dashboard.html
+		{% extends "base.html" %}
+		{% block title %}Dashboard{% endblock %}
+		{% block content %}
+		<h1>Dashboard</h1>
+		<p>Welcome to your dashboard.</p>
+		{% endblock %}
+		
+		#urls.py
+		urlpatterns = [
+			# ...
+			url(r'^$', views.dashboard, name='dashboard'),
+		]
+		#settings.py
+		from django.core.urlresolvers import reverse_lazy
+		LOGIN_REDIRECT_URL = reverse_lazy('dashboard')
+		LOGIN_URL = reverse_lazy('login')
+		LOGOUT_URL = reverse_lazy('logout')
+		
+		#base.html
+		<div id="header">
+		<span class="logo">Bookmarks</span>
+		{% if request.user.is_authenticated %}
+		<ul class="menu">
+		<li {% if section == "dashboard" %}class="selected"{% endif %}>
+		<a href="{% url "dashboard" %}">My dashboard</a>
+		</li>
+		<li {% if section == "images" %}class="selected"{% endif %}>
+		<a href="#">Images</a>
+		</li>
+		<li {% if section == "people" %}class="selected"{% endif %}>
+		<a href="#">People</a>
+		</li>
+		</ul>
+		{% endif %}
+		<span class="user">
+		{% if request.user.is_authenticated %}
+		Hello {{ request.user.first_name }},
+		<a href="{% url "logout" %}">Logout</a>
+		{% else %}
+		<a href="{% url "login" %}">Log-in</a>
+		{% endif %}
+		</span>
+		</div>
+		
+	4-4- Vue modification de mot de passe
+		# change password urls
+		url(r'^password-change/$','django.contrib.auth.views.password_change',name='password_change'),
+		url(r'^password-change/done/$',	'django.contrib.auth.views.password_change_done', name='password_change_done'),
+		
+		#password_change_form.html
+		{% extends "base.html" %}
+		{% block title %}Change you password{% endblock %}
+		{% block content %}
+			<h1>Change you password</h1>
+			<p>Use the form below to change your password.</p>
+			<form action="." method="post">
+				{{ form.as_p }}
+					<p><input type="submit" value="Change"></p>
+				{% csrf_token %}
+			</form>
+		{% endblock %}
+		#password_change_done.html
+		{% extends "base.html" %}
+		{% block title %}Password changed{% endblock %}
+		{% block content %}
+			<h1>Password changed</h1>
+			<p>Your password has been successfully changed.</p>
+		{% endblock %}
+		
+	4-5- Reinitialiser le mdp
+		# restore password urls
+		url(r'^password-reset/$','django.contrib.auth.views.password_reset',name='password_reset'),
+		url(r'^password-reset/done/$',	'django.contrib.auth.views.password_reset_done',	name='password_reset_done'),
+		url(r'^password-reset/confirm/(?P<uidb64>[-\w]+)/(?P<token>[-\w]+)/$',	'django.contrib.auth.views.password_reset_confirm',	name='password_reset_confirm'),
+		url(r'^password-reset/complete/$','django.contrib.auth.views.password_reset_complete',	name='password_reset_complete'),
+		#password_reset_form.html
+		{% extends "base.html" %}
+		{% block title %}Reset your password{% endblock %}
+		{% block content %}
+		<h1>Forgotten your password?</h1>
+		<p>Enter your e-mail address to obtain a new password.</p>
+		<form action="." method="post">
+		{{ form.as_p }}
+		<p><input type="submit" value="Send e-mail"></p>
+		{% csrf_token %}
+		</form>
+		#password_reset_email.html
+		Someone asked for password reset for email {{ email }}. Follow the link below:
+		{{ protocol }}://{{ domain }}{% url "password_reset_confirm" uidb64=uid token=token %}
+		Your username, in case you've forgotten: {{ user.get_username }}
+		{% endblock %}
+		#password_reset_done.html.
+		{% extends "base.html" %}
+		{% block title %}Reset your password{% endblock %}
+		{% block content %}
+		<h1>Reset your password</h1>
+		<p>We've emailed you instructions for setting your password.</p>
+		<p>If you don't receive an email, please make sure you've entered
+		the address you registered with.</p>
+		{% endblock %}
+		#password_reset_confirm.html
+		{% extends "base.html" %}
+		{% block title %}Reset your password{% endblock %}
+		{% block content %}
+		<h1>Reset your password</h1>
+		{% if validlink %}
+		<p>Please enter your new password twice:</p>
+		<form action="." method="post">
+		{{ form.as_p }}
+		{% csrf_token %}
+		<p><input type="submit" value="Change my password" /></p>
+		</form>
+		{% else %}
+		<p>The password reset link was invalid, possibly because it has
+		already been used. Please request a new password reset.</p>
+		{% endif %}
+		{% endblock %}
+		#password_reset_complete.html
+		{% extends "base.html" %}
+		{% block title %}Password reset{% endblock %}
+		{% block content %}
+		<h1>Password set</h1>
+		<p>Your password has been set. You can <a href="{% url "login"
+		%}">log in now</a></p>
+		{% endblock %}
+		#login.html
+		...
+		<p><a href="{% url "password_reset" %}">Forgotten your
+		password?</a></p>
+	
+						

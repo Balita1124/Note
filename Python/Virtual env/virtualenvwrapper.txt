@@ -1,6 +1,6 @@
 Installation
 ----------------------------------
-$ pip install virtualenvwrapper
+$ pip install virtualenvwrapper-win
 
 Cration d'un virtualenv
 ==========================

@@ -1,0 +1,3 @@
+<IfModule mpm_winnt_module>
+  ThreadStackSize 8388608
+</IfModule>

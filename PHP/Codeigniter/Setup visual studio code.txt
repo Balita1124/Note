@@ -1,0 +1,7 @@
+TL;DR
+    Download and install Visual Studio Code (http://code.visualstudio.com/)
+    Configure PHP linting in user settings
+    Download and install the PHP Debug extension from the Visual Studio Marketplace
+    Configure the PHP Debug extension for XDebug (https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug)
+	
+

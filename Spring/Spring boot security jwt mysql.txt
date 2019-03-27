@@ -1,0 +1,1560 @@
+Source: https://www.callicoder.com/spring-boot-spring-security-jwt-mysql-react-app-part-3/
+
+Dependences initial
+========================================================
+	= WEB
+	= JPA
+	= MySQL
+	= Security
+	
+Dependences additionnels
+=====================================================================
+<!-- For Working with Json Web Tokens (JWT) -->
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt</artifactId>
+    <version>0.9.0</version>
+</dependency>
+
+<!-- For Java 8 Date/Time Support -->
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+</dependency>
+
+Configuration du serveur, Base de données et Hibernate
+======================================================================
+#src/main/resources/application.properties
+
+## Server Properties
+server.port= 5000
+
+## Spring DATASOURCE (DataSourceAutoConfiguration & DataSourceProperties)
+spring.datasource.url= jdbc:mysql://localhost:3306/polling_app?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
+spring.datasource.username= root
+spring.datasource.password= callicoder
+
+## Hibernate Properties
+
+# The SQL dialect makes Hibernate generate better SQL for the chosen database
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+spring.jpa.hibernate.ddl-auto = update
+
+## Hibernate Logging
+logging.level.org.hibernate.SQL= DEBUG
+
+# Initialize the datasource with available DDL and DML scripts
+spring.datasource.initialization-mode=always
+
+## Jackson Properties
+spring.jackson.serialization.WRITE_DATES_AS_TIMESTAMPS= false
+spring.jackson.time-zone= UTC
+
+Configuration Spring Boot pour utiliser Java 8 Date/Time
+======================================================================
+Main class PollsApplication.java
+
+package com.example.polls;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
+
+import javax.annotation.PostConstruct;
+import java.util.TimeZone;
+
+@SpringBootApplication
+@EntityScan(basePackageClasses = { 
+		PollsApplication.class,
+		Jsr310JpaConverters.class 
+})
+public class PollsApplication {
+
+	@PostConstruct
+	void init() {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+	}
+
+	public static void main(String[] args) {
+		SpringApplication.run(PollsApplication.class, args);
+	}
+}
+
+Creation des models
+=====================================================================
+User
+---------------------------------------------------------------------
+package com.example.polls.model;
+
+import com.example.polls.model.audit.DateAudit;
+import org.hibernate.annotations.NaturalId;
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {
+            "username"
+        }),
+        @UniqueConstraint(columnNames = {
+            "email"
+        })
+})
+public class User extends DateAudit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    @Size(max = 40)
+    private String name;
+
+    @NotBlank
+    @Size(max = 15)
+    private String username;
+
+    @NaturalId
+    @NotBlank
+    @Size(max = 40)
+    @Email
+    private String email;
+
+    @NotBlank
+    @Size(max = 100)
+    private String password;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+
+    public User() {
+
+    }
+
+    public User(String name, String username, String email, String password) {
+        this.name = name;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+}
+
+Role
+--------------------------------------
+
+package com.example.polls.model;
+
+import org.hibernate.annotations.NaturalId;
+import javax.persistence.*;
+
+@Entity
+@Table(name = "roles")
+public class Role {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @NaturalId
+    @Column(length = 60)
+    private RoleName name;
+
+    public Role() {
+
+    }
+
+    public Role(RoleName name) {
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public RoleName getName() {
+        return name;
+    }
+
+    public void setName(RoleName name) {
+        this.name = name;
+    }
+}
+
+Role Name
+--------------------------------------
+
+package com.example.polls.model;
+
+public enum  RoleName {
+    ROLE_USER,
+    ROLE_ADMIN
+}
+
+DateAudit
+--------------------------------------
+
+package com.example.polls.model.audit;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import javax.persistence.Column;
+import javax.persistence.EntityListeners;
+import javax.persistence.MappedSuperclass;
+import java.io.Serializable;
+import java.time.Instant;
+
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+@JsonIgnoreProperties(
+        value = {"createdAt", "updatedAt"},
+        allowGetters = true
+)
+public abstract class DateAudit implements Serializable {
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant updatedAt;
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}
+
+AuditingConfig 
+---------------------------------------
+
+package com.example.polls.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@Configuration
+@EnableJpaAuditing
+public class AuditingConfig {
+    // That's all here for now. We'll add more auditing configurations later.
+}
+
+Creation des repositories pour User et Roles
+===================================================
+UserRepository
+----------------
+
+package com.example.polls.repository;
+
+import com.example.polls.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsernameOrEmail(String username, String email);
+
+    List<User> findByIdIn(List<Long> userIds);
+
+    Optional<User> findByUsername(String username);
+
+    Boolean existsByUsername(String username);
+
+    Boolean existsByEmail(String email);
+}
+
+RoleRepository
+-----------------------
+
+package com.example.polls.repository;
+
+import com.example.polls.model.Role;
+import com.example.polls.model.RoleName;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+
+@Repository
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    Optional<Role> findByName(RoleName roleName);
+}
+
+Creation des roles par defaut
+=======================================
+INSERT INTO roles(name) VALUES('ROLE_USER');
+INSERT INTO roles(name) VALUES('ROLE_ADMIN');
+
+Configuration de Spring security et JWT
+==========================================
+
+SecurityConfig
+---------------
+package com.example.polls.config;
+
+import com.example.polls.security.CustomUserDetailsService;
+import com.example.polls.security.JwtAuthenticationEntryPoint;
+import com.example.polls.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.BeanIds;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(
+        securedEnabled = true,
+        jsr250Enabled = true,
+        prePostEnabled = true
+)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Autowired
+    CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private JwtAuthenticationEntryPoint unauthorizedHandler;
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
+    }
+
+    @Override
+    public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+        authenticationManagerBuilder
+                .userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder());
+    }
+
+    @Bean(BeanIds.AUTHENTICATION_MANAGER)
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .cors()
+                    .and()
+                .csrf()
+                    .disable()
+                .exceptionHandling()
+                    .authenticationEntryPoint(unauthorizedHandler)
+                    .and()
+                .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
+                .authorizeRequests()
+                    .antMatchers("/",
+                        "/favicon.ico",
+                        "/**/*.png",
+                        "/**/*.gif",
+                        "/**/*.svg",
+                        "/**/*.jpg",
+                        "/**/*.html",
+                        "/**/*.css",
+                        "/**/*.js")
+                        .permitAll()
+                    .antMatchers("/api/auth/**")
+                        .permitAll()
+                    .antMatchers("/api/user/checkUsernameAvailability", "/api/user/checkEmailAvailability")
+                        .permitAll()
+                    .antMatchers(HttpMethod.GET, "/api/polls/**", "/api/users/**")
+                        .permitAll()
+                    .anyRequest()
+                        .authenticated();
+
+        // Add our custom JWT security filter
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+    }
+}
+
+Exemple d'utilisation des roles
+-------------------------------------------
+
+
+
+    = securedEnabled: It enables the @Secured annotation using which you can protect your controller/service methods like so -
+
+    @Secured("ROLE_ADMIN")
+    public User getAllUsers() {}
+
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
+    public User getUser(Long id) {}
+
+    @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
+    public boolean isUsernameAvailable() {}
+
+    = jsr250Enabled: It enables the @RolesAllowed annotation that can be used like this -
+
+    @RolesAllowed("ROLE_ADMIN")
+    public Poll createPoll() {}  
+
+    = prePostEnabled: It enables more complex expression based access control syntax with @PreAuthorize and @PostAuthorize annotations -
+
+    @PreAuthorize("isAnonymous()")
+    public boolean isUsernameAvailable() {}
+
+    @PreAuthorize("hasRole('USER')")
+    public Poll createPoll() {}
+
+Creation d'un custom class spring security, filtres, annotations
+==================================================================
+JwtAuthenticationEntryPoint 
+-------------------------------
+
+package com.example.polls.security;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@Component
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
+    @Override
+    public void commence(HttpServletRequest httpServletRequest,
+                         HttpServletResponse httpServletResponse,
+                         AuthenticationException e) throws IOException, ServletException {
+        logger.error("Responding with unauthorized error. Message - {}", e.getMessage());
+        httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+    }
+}
+
+UserPrincipal 
+--------------------------------
+package com.example.polls.security;
+
+import com.example.polls.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+public class UserPrincipal implements UserDetails {
+    private Long id;
+
+    private String name;
+
+    private String username;
+
+    @JsonIgnore
+    private String email;
+
+    @JsonIgnore
+    private String password;
+
+    private Collection<? extends GrantedAuthority> authorities;
+
+    public UserPrincipal(Long id, String name, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.authorities = authorities;
+    }
+
+    public static UserPrincipal create(User user) {
+        List<GrantedAuthority> authorities = user.getRoles().stream().map(role ->
+                new SimpleGrantedAuthority(role.getName().name())
+        ).collect(Collectors.toList());
+
+        return new UserPrincipal(
+                user.getId(),
+                user.getName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPassword(),
+                authorities
+        );
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserPrincipal that = (UserPrincipal) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(id);
+    }
+}
+
+UserDetailsService 
+---------------------------
+package com.example.polls.security;
+
+import com.example.polls.model.User;
+import com.example.polls.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Override
+    @Transactional
+    public UserDetails loadUserByUsername(String usernameOrEmail)
+            throws UsernameNotFoundException {
+        // Let people login with either username or email
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> 
+                        new UsernameNotFoundException("User not found with username or email : " + usernameOrEmail)
+        );
+
+        return UserPrincipal.create(user);
+    }
+
+    // This method is used by JWTAuthenticationFilter
+    @Transactional
+    public UserDetails loadUserById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(
+            () -> new UsernameNotFoundException("User not found with id : " + id)
+        );
+
+        return UserPrincipal.create(user);
+    }
+}
+
+JwtTokenProvider 
+--------------------------
+
+package com.example.polls.security;
+
+import io.jsonwebtoken.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+import java.util.Date;
+
+@Component
+public class JwtTokenProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
+
+    @Value("${app.jwtExpirationInMs}")
+    private int jwtExpirationInMs;
+
+    public String generateToken(Authentication authentication) {
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .setSubject(Long.toString(userPrincipal.getId()))
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+    }
+
+    public Long getUserIdFromJWT(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
+
+        return Long.parseLong(claims.getSubject());
+    }
+
+    public boolean validateToken(String authToken) {
+        try {
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            return true;
+        } catch (SignatureException ex) {
+            logger.error("Invalid JWT signature");
+        } catch (MalformedJwtException ex) {
+            logger.error("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            logger.error("Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            logger.error("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            logger.error("JWT claims string is empty.");
+        }
+        return false;
+    }
+}
+
+application.properties
+----------------------
+
+app.jwtSecret= JWTSuperSecretKey
+app.jwtExpirationInMs = 604800000
+
+JwtAuthenticationFilter 
+----------------------------------
+package com.example.polls.security;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String jwt = getJwtFromRequest(request);
+
+            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+                Long userId = tokenProvider.getUserIdFromJWT(jwt);
+
+                UserDetails userDetails = customUserDetailsService.loadUserById(userId);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception ex) {
+            logger.error("Could not set user authentication in security context", ex);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7, bearerToken.length());
+        }
+        return null;
+    }
+}
+
+
+CurrentUser 
+-----------------------------
+package com.example.polls.security;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.lang.annotation.*;
+
+@Target({ElementType.PARAMETER, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@AuthenticationPrincipal
+public @interface CurrentUser {
+
+}
+
+Creation des apis Login et Signup
+===========================================
+LoginRequest
+--------------
+
+package com.example.polls.payload;
+
+import javax.validation.constraints.NotBlank;
+
+public class LoginRequest {
+    @NotBlank
+    private String usernameOrEmail;
+
+    @NotBlank
+    private String password;
+
+    public String getUsernameOrEmail() {
+        return usernameOrEmail;
+    }
+
+    public void setUsernameOrEmail(String usernameOrEmail) {
+        this.usernameOrEmail = usernameOrEmail;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+SignUpRequest
+--------------
+
+package com.example.polls.payload;
+
+import javax.validation.constraints.*;
+
+public class SignUpRequest {
+    @NotBlank
+    @Size(min = 4, max = 40)
+    private String name;
+
+    @NotBlank
+    @Size(min = 3, max = 15)
+    private String username;
+
+    @NotBlank
+    @Size(max = 40)
+    @Email
+    private String email;
+
+    @NotBlank
+    @Size(min = 6, max = 20)
+    private String password;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+JwtAuthenticationResponse
+-----------------------------
+
+package com.example.polls.payload;
+
+public class JwtAuthenticationResponse {
+    private String accessToken;
+    private String tokenType = "Bearer";
+
+    public JwtAuthenticationResponse(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+}
+
+ApiResponse
+--------------------------------
+
+package com.example.polls.payload;
+
+public class ApiResponse {
+    private Boolean success;
+    private String message;
+
+    public ApiResponse(Boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
+
+    public Boolean getSuccess() {
+        return success;
+    }
+
+    public void setSuccess(Boolean success) {
+        this.success = success;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+}
+
+Custom Business Exception
+===========================================
+AppException
+-------------------
+
+package com.example.polls.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+public class AppException extends RuntimeException {
+    public AppException(String message) {
+        super(message);
+    }
+
+    public AppException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+BadRequestException
+------------------------
+
+package com.example.polls.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class BadRequestException extends RuntimeException {
+
+    public BadRequestException(String message) {
+        super(message);
+    }
+
+    public BadRequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+ResourceNotFoundException
+--------------------------
+
+package com.example.polls.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class ResourceNotFoundException extends RuntimeException {
+    private String resourceName;
+    private String fieldName;
+    private Object fieldValue;
+
+    public ResourceNotFoundException( String resourceName, String fieldName, Object fieldValue) {
+        super(String.format("%s not found with %s : '%s'", resourceName, fieldName, fieldValue));
+        this.resourceName = resourceName;
+        this.fieldName = fieldName;
+        this.fieldValue = fieldValue;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public Object getFieldValue() {
+        return fieldValue;
+    }
+}
+
+Controller d'authentification
+======================================
+
+AuthController
+-----------------
+
+package com.example.polls.controller;
+
+import com.example.polls.exception.AppException;
+import com.example.polls.model.Role;
+import com.example.polls.model.RoleName;
+import com.example.polls.model.User;
+import com.example.polls.payload.ApiResponse;
+import com.example.polls.payload.JwtAuthenticationResponse;
+import com.example.polls.payload.LoginRequest;
+import com.example.polls.payload.SignUpRequest;
+import com.example.polls.repository.RoleRepository;
+import com.example.polls.repository.UserRepository;
+import com.example.polls.security.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import javax.validation.Valid;
+import java.net.URI;
+import java.util.Collections;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    RoleRepository roleRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JwtTokenProvider tokenProvider;
+
+    @PostMapping("/signin")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsernameOrEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String jwt = tokenProvider.generateToken(authentication);
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+        if(userRepository.existsByUsername(signUpRequest.getUsername())) {
+            return new ResponseEntity(new ApiResponse(false, "Username is already taken!"),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        if(userRepository.existsByEmail(signUpRequest.getEmail())) {
+            return new ResponseEntity(new ApiResponse(false, "Email Address already in use!"),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Creating user's account
+        User user = new User(signUpRequest.getName(), signUpRequest.getUsername(),
+                signUpRequest.getEmail(), signUpRequest.getPassword());
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                .orElseThrow(() -> new AppException("User Role not set."));
+
+        user.setRoles(Collections.singleton(userRole));
+
+        User result = userRepository.save(user);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath().path("/api/users/{username}")
+                .buildAndExpand(result.getUsername()).toUri();
+
+        return ResponseEntity.created(location).body(new ApiResponse(true, "User registered successfully"));
+    }
+}
+
+Activer le CORS
+======================
+WebMvcConfig 
+------------------
+
+package com.example.polls.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    private final long MAX_AGE_SECS = 3600;
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods("HEAD", "OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE")
+                .maxAge(MAX_AGE_SECS);
+    }
+}
+
+Audition du model et configuration
+=========================================
+UserDateAudit
+------------------
+
+package com.example.polls.model.audit;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+
+import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
+
+@MappedSuperclass
+@JsonIgnoreProperties(
+        value = {"createdBy", "updatedBy"},
+        allowGetters = true
+)
+public abstract class UserDateAudit extends DateAudit {
+    @CreatedBy
+    @Column(updatable = false)
+    private Long createdBy;
+
+    @LastModifiedBy
+    private Long updatedBy;
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+}
+
+AuditingConfig 
+-----------------------------
+
+package com.example.polls.config;
+
+import com.example.polls.security.UserPrincipal;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.Optional;
+
+@Configuration
+@EnableJpaAuditing
+public class AuditingConfig {
+
+    @Bean
+    public AuditorAware<Long> auditorProvider() {
+        return new SpringSecurityAuditAwareImpl();
+    }
+}
+
+class SpringSecurityAuditAwareImpl implements AuditorAware<Long> {
+
+    @Override
+    public Optional<Long> getCurrentAuditor() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null ||
+                !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        
+        return Optional.ofNullable(userPrincipal.getId());
+    }
+}
+
+Business Model
+===========================================
+
+Poll
+--------------------------
+package com.example.polls.model;
+
+import com.example.polls.model.audit.UserDateAudit;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "polls")
+public class Poll extends UserDateAudit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    @Size(max = 140)
+    private String question;
+
+    @OneToMany(
+            mappedBy = "poll",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER,
+            orphanRemoval = true
+    )
+    @Size(min = 2, max = 6)
+    @Fetch(FetchMode.SELECT)
+    @BatchSize(size = 30)
+    private List<Choice> choices = new ArrayList<>();
+
+    @NotNull
+    private Instant expirationDateTime;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    public List<Choice> getChoices() {
+        return choices;
+    }
+
+    public void setChoices(List<Choice> choices) {
+        this.choices = choices;
+    }
+
+    public Instant getExpirationDateTime() {
+        return expirationDateTime;
+    }
+
+    public void setExpirationDateTime(Instant expirationDateTime) {
+        this.expirationDateTime = expirationDateTime;
+    }
+
+    public void addChoice(Choice choice) {
+        choices.add(choice);
+        choice.setPoll(this);
+    }
+
+    public void removeChoice(Choice choice) {
+        choices.remove(choice);
+        choice.setPoll(null);
+    }
+}
+Choice 
+----------
+package com.example.polls.model;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import java.util.Objects;
+
+@Entity
+@Table(name = "choices")
+public class Choice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    @Size(max = 40)
+    private String text;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "poll_id", nullable = false)
+    private Poll poll;
+
+    public Choice() {
+
+    }
+
+    public Choice(String text) {
+        this.text = text;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public Poll getPoll() {
+        return poll;
+    }
+
+    public void setPoll(Poll poll) {
+        this.poll = poll;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Choice choice = (Choice) o;
+        return Objects.equals(id, choice.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+Vote 
+-----------
+package com.example.polls.model;
+
+import com.example.polls.model.audit.DateAudit;
+import javax.persistence.*;
+
+@Entity
+@Table(name = "votes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {
+                "poll_id",
+                "user_id"
+        })
+})
+public class Vote extends DateAudit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "poll_id", nullable = false)
+    private Poll poll;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "choice_id", nullable = false)
+    private Choice choice;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Poll getPoll() {
+        return poll;
+    }
+
+    public void setPoll(Poll poll) {
+        this.poll = poll;
+    }
+
+    public Choice getChoice() {
+        return choice;
+    }
+
+    public void setChoice(Choice choice) {
+        this.choice = choice;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+}
+
+Business Repository
+================================
+
+PollRepository
+-------------------
+package com.example.polls.repository;
+
+import com.example.polls.model.Poll;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface PollRepository extends JpaRepository<Poll, Long> {
+    Optional<Poll> findById(Long pollId);
+
+    Page<Poll> findByCreatedBy(Long userId, Pageable pageable);
+
+    long countByCreatedBy(Long userId);
+
+    List<Poll> findByIdIn(List<Long> pollIds);
+
+    List<Poll> findByIdIn(List<Long> pollIds, Sort sort);
+}
+
+VoteRepository
+----------------------
+
+package com.example.polls.repository;
+
+import com.example.polls.model.ChoiceVoteCount;
+import com.example.polls.model.Vote;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface VoteRepository extends JpaRepository<Vote, Long> {
+    @Query("SELECT NEW com.example.polls.model.ChoiceVoteCount(v.choice.id, count(v.id)) FROM Vote v WHERE v.poll.id in :pollIds GROUP BY v.choice.id")
+    List<ChoiceVoteCount> countByPollIdInGroupByChoiceId(@Param("pollIds") List<Long> pollIds);
+
+    @Query("SELECT NEW com.example.polls.model.ChoiceVoteCount(v.choice.id, count(v.id)) FROM Vote v WHERE v.poll.id = :pollId GROUP BY v.choice.id")
+    List<ChoiceVoteCount> countByPollIdGroupByChoiceId(@Param("pollId") Long pollId);
+
+    @Query("SELECT v FROM Vote v where v.user.id = :userId and v.poll.id in :pollIds")
+    List<Vote> findByUserIdAndPollIdIn(@Param("userId") Long userId, @Param("pollIds") List<Long> pollIds);
+
+    @Query("SELECT v FROM Vote v where v.user.id = :userId and v.poll.id = :pollId")
+    Vote findByUserIdAndPollId(@Param("userId") Long userId, @Param("pollId") Long pollId);
+
+    @Query("SELECT COUNT(v.id) from Vote v where v.user.id = :userId")
+    long countByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT v.poll.id FROM Vote v WHERE v.user.id = :userId")
+    Page<Long> findVotedPollIdsByUserId(@Param("userId") Long userId, Pageable pageable);
+}
+
+

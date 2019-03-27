@@ -1,0 +1,17 @@
+Rest api pour la gestion des employees et implementation d'une bean validation en utilisant Hibernate
+======================================================================================================
+
+Outils et technologies utilisés
+--------------------------------
+ - Spring boot
+ - JDK 1-8 ou plus recent
+ - Spring framework
+ - Hibernate
+ - Maven
+ - Mysql
+ - IDE (Intelli J)
+ 
+Creation et importation du projet
+----------------------------------
+Visiter 
+ 

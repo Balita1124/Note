@@ -1,0 +1,13 @@
+Go to Xdebug Download Page and download the appropriate binary for your Xampp installation.
+Move the downloaded DLL file into your XAMPP PHP extension directory. For my case, it’s at C:\xampp\php\ext  directory.
+Make sure that DLL file has “debug.dll” name.
+Open your php.ini file. For me it’s available at C:\xampp\php\php.ini.
+Paste the below code at the bottom of the file.
+
+zend_extension = c:\xampp\php\ext\xdebug.dll
+xdebug.remote_enable = 1
+xdebug.remote_handler = dbgp
+xdebug.remote_host = localhost
+xdebug.remote_autostart = 1
+xdebug.remote_port = 9000
+xdebug.show_local_vars = 1

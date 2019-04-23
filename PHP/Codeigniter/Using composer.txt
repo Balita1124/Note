@@ -1,0 +1,43 @@
+Make a composer.json in the root of your project (not the application folder):
+
+{
+    "require": {
+        "kriswallsmith/buzz": "*"
+    }
+}
+
+This will add a requirement for the Buzz package, which is a handy HTTP Request / Response PHP 5.3.x class.
+Step 3
+
+To actually install these files to your CodeIgniter project you simply run the install command:
+
+$ composer.phar install
+
+If you have installed via Homebrew then this will be:
+
+$ composer install
+
+Then you should notice composer creating a ./vendors folder in your application and code will be installed there.
+Step 4
+
+To autoload this newly installed code all you need to do is drop a single line of PHP into your index.php
+
+include_once './vendor/autoload.php';
+
+Done
+
+It is as simple as that. Now in my test controller I can use Buzz happily, along with any other PSR-0 code that I install via Composer:
+
+class Test extends CI_Controller
+{
+	public function index()
+	{
+		$browser = new Buzz\Browser();
+		$response = $browser->get('http://www.google.com');
+
+		echo $browser->getLastRequest()."\n";
+		echo $response;
+	}
+}
+
+To see what is available check out Packagist - the default repo for Composer packages.

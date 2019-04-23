@@ -1,0 +1,37 @@
+when I try to create in my laptop it doesn't work. I still can't figure out what's wrong. Here's what I did.
+
+    I copy the wordpress file in this folder. This will be the path of my project
+        E:\Subversion\chelle.wpblog.local
+
+    I edit the host file
+        C:\Windows\System32\drivers\etc\hosts
+
+        I added it to the end of file
+
+        127.0.0.1 chelle.wpblog.local
+
+    Next is I enable the virtual host in Apache
+        C:\wamp\bin\apache\Apache2.4.4\conf\httpd.conf
+
+        I uncomment this
+
+        Include conf/extra/httpd-vhosts.conf
+
+    Next is I setup the virtual host in WAMP
+        C:\wamp\bin\apache\Apache2.4.4\conf\extra\httpd-vhosts.conf
+
+        I add this at the bottom
+
+        <VirtualHost *:80>
+            ServerName chelle.wpblog.local
+            ServerAlias chelle.wpblog.local
+            DocumentRoot "E:/Subversion/chelle.wpblog.local/"
+            <Directory "E:/Subversion/chelle.wpblog.local/">
+                Options Indexes FollowSymLinks MultiViews
+                AllowOverride All
+                Order allow,deny
+                allow from all    
+            </Directory>
+        </VirtualHost>
+
+    Last is restart wampserver and open the chelle.wpblog.local in the browser. And it doesn't display. It display only google search results.

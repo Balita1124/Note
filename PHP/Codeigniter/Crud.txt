@@ -83,7 +83,6 @@ class Posts extends CI_Controller {
     
     public function index(){
         $data = array();
-        
         //get messages from the session
         if($this->session->userdata('success_msg')){
             $data['success_msg'] = $this->session->userdata('success_msg');

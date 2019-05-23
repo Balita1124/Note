@@ -1,28 +1,27 @@
-Pre-requis
+# Pre-requis
 =================================
 
-    Node.js (recommended version)
-    Angular 7 CLI
-    Angular 7
-    Express and MongoDB API
-    Terminal (Mac/Linux) or Node Command Line (Windows)
-    IDE or Text Editor
+    > * Node.js (recommended version)
+    > * Angular 7 CLI
+    > * Angular 7
+    > * Express and MongoDB API
+    > * Terminal (Mac/Linux) or Node Command Line (Windows)
+    > * IDE or Text Editor
 	
 	-Verification de la version utilisé
-		#node -v
-
-		#npm -v
+		**node -v**
+		**npm -v**
 		
 
-Mise en place de l'environnement de developpement
+# Mise en place de l'environnement de developpement
 ===================================================
 1 - Installation de angular/cli
 
-	#npm install -g @angular/cli
+	**npm install -g @angular/cli**
 	
 2 - Verification de la version utilisé
 	
-	#ng --version
+	**ng --version**
 	
 	Angular CLI: 7.0.1
 	Node: 8.12.0
@@ -39,49 +38,50 @@ Mise en place de l'environnement de developpement
 	@schematics/update           0.10.1
 	rxjs                         6.3.3
 
-Developpement de l'application
+# Developpement de l'application
 ======================================
 	
-1 - Création d'un nouveau projet
+1. ### Création d'un nouveau projet
 	
-	#ng new angular7-crud
+	***ng new angular7-crud***
 	
 	? Would you like to add Angular routing? Yes
 	? Which stylesheet format would you like to use? SCSS
 	
-	- Aller dans le repertoire du projet
+	> * Aller dans le repertoire du projet
 
-	#cd angular7-crud
+	***cd angular7-crud***
 
-	- Lancer l'application
+	> * Lancer l'application
 
-	#ng serve
+	***ng serve***
 	
 	NB: L'adresse par defaut est http://localhost:4200
 
-2 - Creation des routes pour naviguer entre les pages et composants
+2.  ### Creation des routes pour naviguer entre les pages et composants
 
-	2-1- Creation des composants a partir de la commande ng
-		#ng g component products
-		
-		#ng g component product-detail
-		
-		#ng g component product-add
-		
-		#ng g component product-edit
-		
-	NB: les composants sont importés automatiquement dans `src/app/app.module.ts` et declarés dans `@NgModule`
+	2.1. #### Creation des composants a partir de la commande ng
 	
-	2-2- Configurer les routings dans `src/app/app-routing.module.ts`
+		***ng g component products***
 		
-		2-2-1- Importer les composants
+		***ng g component product-detail***
+		
+		***ng g component product-add***
+		
+		***ng g component product-edit***
+		
+	__NB: les composants sont importés automatiquement dans `src/app/app.module.ts` et declarés dans `@NgModule`__
+	
+	2.2. #### Configurer les routings dans `src/app/app-routing.module.ts`
+		
+		2.2.1. ##### Importer les composants
 		
 			import { ProductsComponent } from './products/products.component';
 			import { ProductDetailComponent } from './product-detail/product-detail.component';
 			import { ProductAddComponent } from './product-add/product-add.component';
 			import { ProductEditComponent } from './product-edit/product-edit.component';
 			
-		2-2-1- Ajouter la route dans l'array existant
+		2.2.1. ##### Ajouter la route dans l'array existant
 			const routes: Routes = [
 					{
 						path: 'products',
@@ -108,19 +108,22 @@ Developpement de l'application
 						pathMatch: 'full'
 						}
 					];
-	2-3-Configurer les vues
-
-		2-3-1- configurer la vue principal `src/app/app.component.html`
+					
+	2.3. ##### Configurer les vues
 		
+		2.3.1. ###### configurer la vue principal `src/app/app.component.html`
+			~~~
 			<div class="container">
 			  <router-outlet></router-outlet>
 			</div>
-		
-		2-3-2- Configurer le css
+			~~~
+		2.3.2. ###### Configurer le css
 			
+			```css
 			.container {
 			  padding: 20px;
 			}
+			```
 	
 3- Creation des services pour acceder au RESTFULL API
 	3-1- installation ou declaration de `HttpClientModule` dans `src/app/app.module.ts`

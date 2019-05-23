@@ -1,5 +1,4 @@
-# Pre-requis
-=================================
+# Pre-requis #
 
     > * Node.js (recommended version)
     > * Angular 7 CLI
@@ -13,8 +12,8 @@
 		**npm -v**
 		
 
-# Mise en place de l'environnement de developpement
-===================================================
+# Mise en place de l'environnement de developpement #
+
 1 - Installation de angular/cli
 
 	**npm install -g @angular/cli**

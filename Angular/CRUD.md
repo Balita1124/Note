@@ -1,26 +1,27 @@
 # Pre-requis #
 
-    > * Node.js (recommended version)
-    > * Angular 7 CLI
-    > * Angular 7
-    > * Express and MongoDB API
-    > * Terminal (Mac/Linux) or Node Command Line (Windows)
-    > * IDE or Text Editor
+    * Node.js (recommended version)
+    * Angular 7 CLI
+    * Angular 7
+    * Express and MongoDB API
+    * Terminal (Mac/Linux) or Node Command Line (Windows)
+    * IDE or Text Editor
 	
-	-Verification de la version utilisé
-		**node -v**
-		**npm -v**
+	*Verification de la version utilisé
+	
+		***node -v***
+		***npm -v***
 		
 
 # Mise en place de l'environnement de developpement #
 
 1 - Installation de angular/cli
 
-	**npm install -g @angular/cli**
+	***npm install -g @angular/cli***
 	
 2 - Verification de la version utilisé
 	
-	**ng --version**
+	***ng --version***
 	
 	Angular CLI: 7.0.1
 	Node: 8.12.0
@@ -47,19 +48,19 @@
 	? Would you like to add Angular routing? Yes
 	? Which stylesheet format would you like to use? SCSS
 	
-	> * Aller dans le repertoire du projet
+	* Aller dans le repertoire du projet
 
 	***cd angular7-crud***
 
-	> * Lancer l'application
+	* Lancer l'application
 
 	***ng serve***
 	
 	NB: L'adresse par defaut est http://localhost:4200
 
-2.  ### Creation des routes pour naviguer entre les pages et composants
+2.  ### Creation des routes pour naviguer entre les pages et composants ###
 
-	2.1. #### Creation des composants a partir de la commande ng
+	2.1. #### Creation des composants a partir de la commande ng ####
 	
 		***ng g component products***
 		

@@ -1,27 +1,27 @@
-# Pre-requis #
+Pre-requis
 
-    * Node.js (recommended version)
-    * Angular 7 CLI
-    * Angular 7
-    * Express and MongoDB API
-    * Terminal (Mac/Linux) or Node Command Line (Windows)
-    * IDE or Text Editor
+    Node.js (recommended version)
+    Angular 7 CLI
+    Angular 7
+    Express and MongoDB API
+    Terminal (Mac/Linux) or Node Command Line (Windows)
+    IDE or Text Editor
 	
-	*Verification de la version utilisé
-	
-		***node -v***
-		***npm -v***
+	-Verification de la version utilisé
+		#node -v
+
+		#npm -v
 		
 
-# Mise en place de l'environnement de developpement #
+Mise en place de l'environnement de developpement
 
 1 - Installation de angular/cli
 
-	***npm install -g @angular/cli***
+	#npm install -g @angular/cli
 	
 2 - Verification de la version utilisé
 	
-	***ng --version***
+	#ng --version
 	
 	Angular CLI: 7.0.1
 	Node: 8.12.0
@@ -37,51 +37,46 @@
 	@schematics/angular          7.0.1
 	@schematics/update           0.10.1
 	rxjs                         6.3.3
+	
+3 - Création d'un nouveau projet
 
-# Developpement de l'application
-======================================
-	
-1. ### Création d'un nouveau projet
-	
-	***ng new angular7-crud***
+	#ng new angular7-crud
 	
 	? Would you like to add Angular routing? Yes
 	? Which stylesheet format would you like to use? SCSS
 	
-	* Aller dans le repertoire du projet
+4 - Aller dans le repertoire du projet
 
-	***cd angular7-crud***
+	#cd angular7-crud
 
-	* Lancer l'application
+5 - Lancer l'application
 
-	***ng serve***
+	#ng serve
 	
 	NB: L'adresse par defaut est http://localhost:4200
 
-2.  ### Creation des routes pour naviguer entre les pages et composants ###
-
-	2.1. #### Creation des composants a partir de la commande ng ####
+6 - Creation des routes pour naviguer entre les pages et composants
+	6-1- Creation des composants a partir de la commande ng
+		#ng g component products
+		
+		#ng g component product-detail
+		
+		#ng g component product-add
+		
+		#ng g component product-edit
+		
+	NB: les composants sont importés automatiquement dans `src/app/app.module.ts` et declarés dans `@NgModule`
 	
-		***ng g component products***
+	6-2- Configurer les routings dans `src/app/app-routing.module.ts`
 		
-		***ng g component product-detail***
-		
-		***ng g component product-add***
-		
-		***ng g component product-edit***
-		
-	__NB: les composants sont importés automatiquement dans `src/app/app.module.ts` et declarés dans `@NgModule`__
-	
-	2.2. #### Configurer les routings dans `src/app/app-routing.module.ts`
-		
-		2.2.1. ##### Importer les composants
+		6-2-1- Importer les composants
 		
 			import { ProductsComponent } from './products/products.component';
 			import { ProductDetailComponent } from './product-detail/product-detail.component';
 			import { ProductAddComponent } from './product-add/product-add.component';
 			import { ProductEditComponent } from './product-edit/product-edit.component';
 			
-		2.2.1. ##### Ajouter la route dans l'array existant
+		6-2-1- Ajouter la route dans l'array existant
 			const routes: Routes = [
 					{
 						path: 'products',
@@ -108,25 +103,22 @@
 						pathMatch: 'full'
 						}
 					];
-					
-	2.3. ##### Configurer les vues
+	6-3-Configurer les vues
+
+		6-3-1- configurer la vue principal `src/app/app.component.html`
 		
-		2.3.1. ###### configurer la vue principal `src/app/app.component.html`
-			~~~
 			<div class="container">
 			  <router-outlet></router-outlet>
 			</div>
-			~~~
-		2.3.2. ###### Configurer le css
+		
+		6-3-2- Configurer le css
 			
-			```css
 			.container {
 			  padding: 20px;
 			}
-			```
 	
-3- Creation des services pour acceder au RESTFULL API
-	3-1- installation ou declaration de `HttpClientModule` dans `src/app/app.module.ts`
+7- Creation des services pour acceder au RESTFULL API
+	7-1- installation ou declaration de `HttpClientModule` dans `src/app/app.module.ts`
 		- import 
 
 			import { FormsModule } from '@angular/forms';
@@ -140,7 +132,7 @@
 			  HttpClientModule,
 			  AppRoutingModule
 			],
-	3-2- Creation du type `Product` dans `src/app/product.ts` pour avoir un resultat typé objet
+	7-2- Creation du type `Product` dans `src/app/product.ts` pour avoir un resultat typé objet
 		
 		export class Product {
 		  id: number;
@@ -149,11 +141,11 @@
 		  prod_price: number;
 		  updated_at: Date;
 		}
-	3-3- Generer un service
+	7-3- Generer un service
 	
 	#ng generate service api
 	
-	3-4-Parametrer le service
+	7-4-Parametrer le service
 		- Import
 		---------
 	
@@ -229,8 +221,8 @@
 			  );
 			}
 		
-4 - Afficher la liste des produits
-	4-1-Developpement du composant `src/app/products/products.component.ts`
+8 - Afficher la liste des produits
+	8-1-Developpement du composant `src/app/products/products.component.ts`
 		- import 
 		
 			import { ApiService } from '../api.service';
@@ -303,7 +295,7 @@
 				});
 			}
 			
-	4-2- Mise en place de 	`src/app/products/products.component.html`
+	8-2- Mise en place de 	`src/app/products/products.component.html`
 	
 		<div class="example-container mat-elevation-z8">
 		  <div class="example-loading-shade"
@@ -335,7 +327,7 @@
 		  </div>
 		</div>
 		
-	4-3- Mise en place du CSS dans `src/app/products/products.component.css`
+	8-3- Mise en place du CSS dans `src/app/products/products.component.css`
 	
 		/* Structure */
 		.example-container {
@@ -386,9 +378,9 @@
 		  margin: 5px;
 		}
 	
-5 - Afficher et supprimer un produit
+9 - Afficher et supprimer un produit
 
-	5 - 1 -Configuration de `src/app/product-detail/product-detail.component.ts`
+	9 - 1 -Configuration de `src/app/product-detail/product-detail.component.ts`
 		- importation
 			import { ActivatedRoute, Router } from '@angular/router';
 			import { ApiService } from '../api.service';
@@ -424,7 +416,7 @@
 				  }
 				);
 			}
-	5-2- Mise en place de la vue `src/app/product-detail/product-detail.component.html`
+	9-2- Mise en place de la vue `src/app/product-detail/product-detail.component.html`
 		- le fichier html `src/app/product-detail/product-detail.component.html`
 			<div class="example-container mat-elevation-z8">
 			  <div class="example-loading-shade"
@@ -477,9 +469,9 @@
 			.mat-flat-button {
 			  margin: 5px;
 			}
-6 - Ajouter produit
+10 - Ajouter produit
 
-	6-1- Mise en place de `src/app/product-add/product-add.component.ts`
+	10-1- Mise en place de `src/app/product-add/product-add.component.ts`
 		- importation
 		
 			import { Router } from '@angular/router';
@@ -521,7 +513,7 @@
 				  });
 			}
 		
-	6-2- Mise en place de la vue `src/app/product-add/product-add.component.html`
+	10-2- Mise en place de la vue `src/app/product-add/product-add.component.html`
 		- Le fichier HTML
 		---------------------
 		<div class="example-container mat-elevation-z8">
@@ -591,9 +583,9 @@
 		.mat-flat-button {
 		  margin: 5px;
 		}
-7 - Modifier un produit
+11 - Modifier un produit
 
-	7-1- Mise en place du composant `src/app/product-edit/product-edit.component.ts`
+	11-1- Mise en place du composant `src/app/product-edit/product-edit.component.ts`
 		- Importation
 		
 		import { Router, ActivatedRoute } from '@angular/router';
@@ -658,7 +650,7 @@
 		productDetails() {
 		  this.router.navigate(['/product-details', this._id]);
 		}
-	7-1- Mise en place de la vue dans `src/app/product-edit/product-edit.component.html`
+	11-1- Mise en place de la vue dans `src/app/product-edit/product-edit.component.html`
 		- fichier HTML
 		<div class="example-container mat-elevation-z8">
 		  <div class="example-loading-shade"

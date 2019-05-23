@@ -38,26 +38,30 @@ Mise en place de l'environnement de developpement
 	@schematics/angular          7.0.1
 	@schematics/update           0.10.1
 	rxjs                         6.3.3
-	
-3 - Création d'un nouveau projet
 
+Developpement de l'application
+======================================
+	
+1 - Création d'un nouveau projet
+	
 	#ng new angular7-crud
 	
 	? Would you like to add Angular routing? Yes
 	? Which stylesheet format would you like to use? SCSS
 	
-4 - Aller dans le repertoire du projet
+	- Aller dans le repertoire du projet
 
 	#cd angular7-crud
 
-5 - Lancer l'application
+	- Lancer l'application
 
 	#ng serve
 	
 	NB: L'adresse par defaut est http://localhost:4200
 
-6 - Creation des routes pour naviguer entre les pages et composants
-	6-1- Creation des composants a partir de la commande ng
+2 - Creation des routes pour naviguer entre les pages et composants
+
+	2-1- Creation des composants a partir de la commande ng
 		#ng g component products
 		
 		#ng g component product-detail
@@ -68,16 +72,16 @@ Mise en place de l'environnement de developpement
 		
 	NB: les composants sont importés automatiquement dans `src/app/app.module.ts` et declarés dans `@NgModule`
 	
-	6-2- Configurer les routings dans `src/app/app-routing.module.ts`
+	2-2- Configurer les routings dans `src/app/app-routing.module.ts`
 		
-		6-2-1- Importer les composants
+		2-2-1- Importer les composants
 		
 			import { ProductsComponent } from './products/products.component';
 			import { ProductDetailComponent } from './product-detail/product-detail.component';
 			import { ProductAddComponent } from './product-add/product-add.component';
 			import { ProductEditComponent } from './product-edit/product-edit.component';
 			
-		6-2-1- Ajouter la route dans l'array existant
+		2-2-1- Ajouter la route dans l'array existant
 			const routes: Routes = [
 					{
 						path: 'products',
@@ -104,22 +108,22 @@ Mise en place de l'environnement de developpement
 						pathMatch: 'full'
 						}
 					];
-	6-3-Configurer les vues
+	2-3-Configurer les vues
 
-		6-3-1- configurer la vue principal `src/app/app.component.html`
+		2-3-1- configurer la vue principal `src/app/app.component.html`
 		
 			<div class="container">
 			  <router-outlet></router-outlet>
 			</div>
 		
-		6-3-2- Configurer le css
+		2-3-2- Configurer le css
 			
 			.container {
 			  padding: 20px;
 			}
 	
-7- Creation des services pour acceder au RESTFULL API
-	7-1- installation ou declaration de `HttpClientModule` dans `src/app/app.module.ts`
+3- Creation des services pour acceder au RESTFULL API
+	3-1- installation ou declaration de `HttpClientModule` dans `src/app/app.module.ts`
 		- import 
 
 			import { FormsModule } from '@angular/forms';
@@ -133,7 +137,7 @@ Mise en place de l'environnement de developpement
 			  HttpClientModule,
 			  AppRoutingModule
 			],
-	7-2- Creation du type `Product` dans `src/app/product.ts` pour avoir un resultat typé objet
+	3-2- Creation du type `Product` dans `src/app/product.ts` pour avoir un resultat typé objet
 		
 		export class Product {
 		  id: number;
@@ -142,11 +146,11 @@ Mise en place de l'environnement de developpement
 		  prod_price: number;
 		  updated_at: Date;
 		}
-	7-3- Generer un service
+	3-3- Generer un service
 	
 	#ng generate service api
 	
-	7-4-Parametrer le service
+	3-4-Parametrer le service
 		- Import
 		---------
 	
@@ -222,8 +226,8 @@ Mise en place de l'environnement de developpement
 			  );
 			}
 		
-8 - Afficher la liste des produits
-	8-1-Developpement du composant `src/app/products/products.component.ts`
+4 - Afficher la liste des produits
+	4-1-Developpement du composant `src/app/products/products.component.ts`
 		- import 
 		
 			import { ApiService } from '../api.service';
@@ -296,7 +300,7 @@ Mise en place de l'environnement de developpement
 				});
 			}
 			
-	8-2- Mise en place de 	`src/app/products/products.component.html`
+	4-2- Mise en place de 	`src/app/products/products.component.html`
 	
 		<div class="example-container mat-elevation-z8">
 		  <div class="example-loading-shade"
@@ -328,7 +332,7 @@ Mise en place de l'environnement de developpement
 		  </div>
 		</div>
 		
-	8-3- Mise en place du CSS dans `src/app/products/products.component.css`
+	4-3- Mise en place du CSS dans `src/app/products/products.component.css`
 	
 		/* Structure */
 		.example-container {
@@ -379,9 +383,9 @@ Mise en place de l'environnement de developpement
 		  margin: 5px;
 		}
 	
-9 - Afficher et supprimer un produit
+5 - Afficher et supprimer un produit
 
-	9 - 1 -Configuration de `src/app/product-detail/product-detail.component.ts`
+	5 - 1 -Configuration de `src/app/product-detail/product-detail.component.ts`
 		- importation
 			import { ActivatedRoute, Router } from '@angular/router';
 			import { ApiService } from '../api.service';
@@ -417,7 +421,7 @@ Mise en place de l'environnement de developpement
 				  }
 				);
 			}
-	9-2- Mise en place de la vue `src/app/product-detail/product-detail.component.html`
+	5-2- Mise en place de la vue `src/app/product-detail/product-detail.component.html`
 		- le fichier html `src/app/product-detail/product-detail.component.html`
 			<div class="example-container mat-elevation-z8">
 			  <div class="example-loading-shade"
@@ -470,9 +474,9 @@ Mise en place de l'environnement de developpement
 			.mat-flat-button {
 			  margin: 5px;
 			}
-10 - Ajouter produit
+6 - Ajouter produit
 
-	10-1- Mise en place de `src/app/product-add/product-add.component.ts`
+	6-1- Mise en place de `src/app/product-add/product-add.component.ts`
 		- importation
 		
 			import { Router } from '@angular/router';
@@ -514,7 +518,7 @@ Mise en place de l'environnement de developpement
 				  });
 			}
 		
-	10-2- Mise en place de la vue `src/app/product-add/product-add.component.html`
+	6-2- Mise en place de la vue `src/app/product-add/product-add.component.html`
 		- Le fichier HTML
 		---------------------
 		<div class="example-container mat-elevation-z8">
@@ -584,9 +588,9 @@ Mise en place de l'environnement de developpement
 		.mat-flat-button {
 		  margin: 5px;
 		}
-11 - Modifier un produit
+7 - Modifier un produit
 
-	11-1- Mise en place du composant `src/app/product-edit/product-edit.component.ts`
+	7-1- Mise en place du composant `src/app/product-edit/product-edit.component.ts`
 		- Importation
 		
 		import { Router, ActivatedRoute } from '@angular/router';
@@ -651,7 +655,7 @@ Mise en place de l'environnement de developpement
 		productDetails() {
 		  this.router.navigate(['/product-details', this._id]);
 		}
-	11-1- Mise en place de la vue dans `src/app/product-edit/product-edit.component.html`
+	7-1- Mise en place de la vue dans `src/app/product-edit/product-edit.component.html`
 		- fichier HTML
 		<div class="example-container mat-elevation-z8">
 		  <div class="example-loading-shade"

@@ -1,0 +1,49 @@
+il y a 2 types de modules avec typescript
+=========================================
+- Internal modules
+- External modules
+
+Internal module
+-----------------
+module mymod {
+	export function doSomething() {
+	// this function can be accessed from outside the module
+	}
+	export class ExportedClass {
+		// this class can be accessed from outside the module
+	}
+	class AnotherClass {
+	// this class can only be accessed from inside the module
+	}
+}
+
+* Pour utiliser un internal module:
+
+var exportedClassInstance = new mymod.ExportedClass();
+
+* ou on peut l'importer de cette facon:
+
+import ExportedClass = mymod.ExportedClass;
+var exportedClassInstance = new ExportedClass();
+
+External Module
+---------------------
+Ce sont les modules les plus utilisés avec angular
+
+Exemple:
+
+Dans un fichier projectdir/ExportedClass.ts : 
+
+class ExportedClass {
+// code ....
+}
+export = ExportedClass;
+
+* Pour utiliser un external module
+
+import ExportedClass = require("projectdir/ExportedClass");
+var exportedClassInstance = new ExportedClass();
+
+
+
+

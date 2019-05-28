@@ -1,0 +1,14 @@
+Enumerations
+===========================
+C'est une mise en place de la liste des constants
+
+enum Color {Red, Green, Blue};
+var c: Color = Color.Green;
+
+Generics
+==============================
+interface LabelledClothing {
+	label: string;
+	size: number;
+}
+var arr: Array<LabelledClothing> = new Array<LabelledClothing>();

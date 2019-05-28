@@ -1,0 +1,1 @@
+- Un arrow function est une fonction qu'on peut ecrire en une seule ligne

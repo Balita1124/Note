@@ -1,0 +1,70 @@
+Mise en place de node dans un projet
+-------------------------------------
+- Aller dans le repertoire du projet
+- Lancer la commande suivante pour generer le fichier packages.json
+	# npm init
+	
+irb en node (interactive console)
+------------------------------------
+	# node
+
+tapez sur entrer pour executer
+
+Executer un fichier js avec node
+------------------------------------
+	# node hello.js
+	
+Niveau d'installation des modules NODE
+--------------------------------------
+- Global: Installer un module qu'on veut acceder a partir de la ligne de ocmmande
+
+	# npm install -g typescript
+
+- Local: utiliser specifiquement pour le projet
+	# npm install express
+
+Execution de de npm
+-------------------------------
+ # npm install express
+ 
+Cette commande ne mettra pas a jour le packages.json
+Pour le mettre a jour il faut uti
+	
+	# npm install express --save
+	ou
+	# npm install express --save-dev
+	
+Verifier si certains modules ne sont plus a jour
+--------------------------------------------------
+	# npm outdated
+
+Verifier la version de node
+-----------------------------
+	# node -v
+
+Desistaller un module node
+-----------------------------
+
+	# npm uninstall express
+	# npm uninstall -g express		// Enlever globalement le module
+	# npm uninstall express --save  // Va enlever le module de packages.json
+	# npm uninstall -g express --save  // Va enlever le module de packages.json
+	
+packages.json
+--------------------------
+- Nom et version du projet
+- Modules dependences du projet
+- Modules dependences pour la production
+- Moudles dependences pour le developpement
+
+Version number des modules
+-----------------------------------
+1.2.1 	Must match version 1.2.1
+>1.2.1 	Must be later than version 1.2.1
+>=1.2.1 Must be version 1.2.1 or later
+<1.2.1 	Must be before version 1.2.1
+<=1.2.1 Must be before or equal to version 1.2.1
+~1.2.1 	Must be approximately equivalent to version 1.2.1
+^1.2.1 	Must be compatible with version 1.2.1
+1.2.x 	Must be any version starting with 1.2.
+* 		any version

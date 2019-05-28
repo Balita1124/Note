@@ -1,0 +1,21 @@
+- Pour declarer un constructeur avec typescript, il faut utiliser le mot cle "constructor"
+- Typescript va assigner automatiquement assigner les parametres comme attributs de la classe
+
+Ceci: 
+
+class Person {
+	constructor(private firstName: string, private lastName: string) {
+	}
+}
+
+est equivalent a:
+
+class Person {
+		private firstName: string;
+		private lastName: string;
+		
+		constructor(firstName: string, lastName: string) {
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
+}

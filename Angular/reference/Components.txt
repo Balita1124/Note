@@ -22,3 +22,41 @@ import { AppComponent, Paragraph } from './app.component';
 	bootstrap: [AppComponent]
 })
 export class AppModule { }
+
+Anatomie d'un component
+================================
+l'anotation @Component
+------------------------
+Role: Fournir a angular les metadatas du component
+
+Exemple:
+
+@Component({
+	selector: 'app-root',
+	templateUrl: './app.component.html',
+	styleUrls: ['./app.component.css']
+})
+
+Les elements basics de l'annotation @Component
+---------------------------------------------------
+selector 			What markup tag, element this component corresponds to.
+template/
+templateUrl			specifies the template, which contains the markup for the component. You have
+					two options: you can use template to specify the template inline in a block of
+					quotes. this works great for simple templates. or you can use templateUrl to
+					specify the relative path to an external template file. this is better for larger or
+					more complicated template.
+					If the template is longer than 10 lines, I usually put it in an external template file.
+styles/
+styleUrls
+					specifies the Css information for the template markup. You have two options:
+					you can use styles to specify an array of styles inline. this works great for
+					just a couple of style definitions. or you can use styleUrls to specify an array
+					of relative paths to style definition files. this is better when you use a variety ofstyles.
+					If there are more than 5 styles used in the component, I usually put them in an
+					external style file.
+					
+
+NB: Le script tag <script> n'est pas autorisés dans un component
+
+

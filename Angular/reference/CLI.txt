@@ -1,0 +1,63 @@
+Installation de cli
+-------------------------
+	# npm install -g angular-cli
+
+Version of CLI
+-------------------
+	# ng --version
+	
+Mettre a jour le CLI
+--------------------------
+Pour mettre a jour le CLI, il faut desinstaller puis reinstaller
+
+	# npm uninstall -g angular-cli
+	# npm cache clean
+	# npm install -g angular-cli
+
+Creation d'un projet
+---------------------------
+	# ng new start   //Creation du projet avec le nom start
+	# cd start		// acceder au repertoire du projet
+	# ng serve		// Executer le projet
+	
+
+
+e2e 				Folder for testing files (more on testing, Karma, and protractor later in this book)
+node_modules 		Folder for project node dependencies
+src 				Folder for project source code
+.editorConfig 		editor configuration file
+.gitignore 			git ignore file
+angular-cli.json 	CLi configuration file. You change your CLi options in this file
+karma-conf.json 	Karma configuration file (more on testing, Karma, and protractor later in this book)
+package.json 		node dependencies configuration file
+protractor-conf.js 	protractor configuration file (more on testing, Karma, and protractor later in this book)
+readMe.md 			readme informational file, contains information on CLi commands
+tslint.json 		Lint configuration file
+	
+
+app 				Folder for your application source code files, currently contains source code for an
+application 		component (more on this later)
+assets 				Folder for your application image and CSS files
+environments 		Folder for configuration files for environments—for example, configurations for development and production
+favicon.ico 		application icon
+index.html 			the htML page for the angular single page application
+main.ts 			Code to start the application (more on this later)
+styles.css 			global style definitions
+test.ts 			Code to run the application tests
+tsconfig.json 		typescript/compiler configuration file
+
+CLI options utiles
+-----------------------
+--flat  : Genere un projet (ou composant ou service) avec un flat file structure
+--inline-template: genere un composant avec un inline template
+--inline-style: genere un composant avec un imline css
+--spec false : gnere un composant sant test
+--minimal: genere un projet minimal avec inlite template et style et sans test
+
+
+Compiler en avance
+--------------------
+# ng serve -aot
+
+
+

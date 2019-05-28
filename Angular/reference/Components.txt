@@ -1,0 +1,24 @@
+- Chaque component contient des valeurs specifiques a lui meme
+		* data en entree
+		* evenement a emettre a l'exterieur
+		* Comment se definir
+		* Quels sont les dependences
+
+- Les component doit etre declarer dans le module
+
+import { AppComponent, Paragraph } from './app.component';
+
+@NgModule({
+	declarations: [
+		AppComponent,
+		Paragraph
+	],
+	imports: [
+		BrowserModule,
+		FormsModule,
+		HttpModule
+	],
+	providers: [],
+	bootstrap: [AppComponent]
+})
+export class AppModule { }

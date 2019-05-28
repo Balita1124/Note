@@ -1,0 +1,15 @@
+Pre requis
+--------------------
+- java
+
+installation
+---------------------
+1 - Telecharger gradle a l'adresse suivante: https://gradle.org/releases
+2 - creer un repertoire C:\gradle puis deziper l'archive dans le repertoire
+
+Configuration du variable d'environnement
+-----------------------------------------
+1 - Ajouter le variable d'environnement GRADLE_HOME=C:\gradle
+2 - puis ajouter GRADLE_HOME/bin dans PATH
+
+Verification de l'installation

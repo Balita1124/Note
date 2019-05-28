@@ -1,0 +1,114 @@
+Installation de twitter bootstrap
+=====================================
+1 - Telecharger la version source de bootstrap et dezziper dans la racine de l'application
+2 - Creer le repertoire common dans views puis ajouter header.php et footer.php
+3 - Enlever index.php de l'url
+	3 - 1 Creer un fichier htaccess dans la racine de l'application
+	3 - 2 Ajouter le contenu suivant
+		<IfModule mod_rewrite.c>
+			RewriteEngine on
+			RewriteCond $1 !^(index\.php|images|robots\.txt)
+			RewriteRule ^(.*)$ index.php/$1 [L]
+		</IfModule>
+	3 - 3 Activer le mode "mod_rewrite" de php
+4 - Installation de Sparks
+Sparks est une sorte d'outil de gestion de librairy
+
+	- Creer un repertoire "tools" dans la racine de code igniter
+	- Telecharger sparks a l'adresse http://getsparks.org/static/install/ (Normal Installation)
+	- Dezipper dans tools
+	- Telecharger le Loader class extension http://getsparks.org/static/install/MY_Loader.php.txt
+	- Renommer le fichier en MY_Loader.php et deplacer dans application/core/MY_Loader.php
+	
+	POur installer un package avec sparks: 
+		php tools/spark install [Package Version] Spark Name
+		
+	exemple d'installation d'un spark 'example-spark':
+		php tools/spark install -v1.0.0 example-spark
+		
+5 - Creation d'un header et un footer partagé
+	application/views/header.php
+	--------------------------------
+	
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width,
+	initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<link rel="shortcut icon" href="<?php echo base_url('bootstrap/ico/favicon.ico'); ?>">
+	<title><?php echo $this->lang->line('system_system_name'); ?></title>
+	<!-- Bootstrap core CSS -->
+	<link href="<?php echo base_url 'bootstrap/css/bootstrap.min.css'); ?>"	rel="stylesheet">
+	<!-- Bootstrap theme -->
+	<link href="<?php echo base_url	('bootstrap/css/bootstrap-theme.min.css'); ?>"	rel="stylesheet">
+	<!-- Custom styles for this template -->
+	<link href="<?php echo base_url	('bootstrap/css/theme.css');?>" rel="stylesheet">
+	<!-- HTML5 shim and Respond.js IE8 support of HTML5
+	elements and media queries -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/libs/
+	html5shiv/3.7.0/html5shiv.js"></script>
+	<script src="https://oss.maxcdn.com/libs/
+	respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	</head>
+	<body role="document">
+	<!-- END header.php -->
+	<div class="container theme-showcase" role="main">
+
+	application/views/footer.php
+	--------------------------------
+	
+	</div> <!-- /container -->
+	<link href="<?php echo base_url('bootstrap/css/bootstrap.min.css'); ?>" rel="stylesheet">
+	<!-- Bootstrap core JavaScript
+	================================================== -->
+	<!-- Placed at the end of the document so the pages
+	load faster -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="<?php echo base_url('bootstrap/js/bootstrap.min.js');?>"></script>
+	<script src="<?php echo base_url('bootstrap/js/docs.min.js');?>"></script>
+	</body>
+	</html>
+	
+Item de langage commumn (Internationnalization)
+===============================================
+application/language/english/en_admin_lang.php
+-----------------------------------------------
+<?php
+// Common form elements
+$lang['common_form_elements_next'] = "Next...";
+$lang['common_form_elements_save'] = "Save...";
+$lang['common_form_elements_cancel'] = "Cancel";
+$lang['common_form_elements_go'] = "Go...";
+$lang['common_form_elements_go_back'] = "Go back";
+$lang['common_form_elements_submission_error'] = "There were errors with the form:";
+$lang['common_form_elements_success_notifty'] = "Success:";
+$lang['common_form_elements_error_notifty'] = "Error:";
+$lang['common_form_elements_actions'] = "Actions";
+$lang['common_form_elements_action_edit'] = "Edit";
+$lang['common_form_elements_action_delete'] = "Delete";
+$lang['common_form_elements_active'] = "Active";
+$lang['common_form_elements_inactive'] = "Inactive";
+$lang['common_form_elements_seccessful_change'] = "Your changes have been saved";
+$lang['common_form_elements_seccessful_delete'] = "The item has been deleted";
+$lang['common_form_elements_yes'] = "Yes";
+$lang['common_form_elements_no'] = "No";
+$lang['common_form_elements_to'] = "to";
+$lang['common_form_elements_from'] = "from";
+$lang['common_form_elements_history'] = "History";
+?>
+
+Creation du fichier MY_Controller
+=======================================
+application/core/MY_Controller.php
+---------------------------------------------
+m
+
+	
+	
+	

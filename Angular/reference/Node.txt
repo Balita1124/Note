@@ -68,3 +68,13 @@ Version number des modules
 ^1.2.1 	Must be compatible with version 1.2.1
 1.2.x 	Must be any version starting with 1.2.
 * 		any version
+
+Exemple minimal de packages.json
+-------------------------------------
+{
+"name" : "MyStaticServer",
+"version" : "0.0.1",
+"dependencies" : {
+"express" : "3.3.x"
+}
+}

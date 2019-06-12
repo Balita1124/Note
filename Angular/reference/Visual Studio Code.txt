@@ -1,0 +1,8 @@
+- Lister les fichiers 
+
+CTRL + P
+
+- Lister les commandes
+
+CTRL + SHIFT + P
+

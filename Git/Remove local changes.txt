@@ -1,0 +1,16 @@
+
+
+If you want remove all local changes from your working copy, simply stash them:
+
+git stash save --keep-index
+
+If you don't need them anymore, you now can drop that stash:
+
+git stash drop
+
+If you want to overwrite only specific parts of your local changes, there are two possibilities:
+
+    Commit everything you don't want to overwrite and use the method above for the rest.
+
+    Use git checkout path/to/file/to/revert for the changes you wish to overwrite. Make sure that file is not staged via git reset HEAD path/to/file/to/revert.
+

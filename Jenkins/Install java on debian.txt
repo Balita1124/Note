@@ -1,0 +1,78 @@
+nstalling the OpenJDK version of Java.
+Method 1: Install using apt-get.
+
+Note: Installing using this method may not lead to Java 10 being installed. Since the version is dependent on what version is available from the repositories, it is possible that you will end up installing Java 8 or 9 instead of 10.
+Installing the JRE:
+
+The Java Runtime Environment normally comes preinstalled on a default installation of Debian 9. However, if you do not have it pre-installed, you can easily install it through apt-get and the pre-loaded repositories.
+
+You may need to use apt-get as a root user in order to install the JRE. To log in as the root user, enter the command found below:
+
+su -
+
+To install the Java Runtime Environment, just execute the following command:
+
+apt-get install default-jre
+
+Installing the JDK  10 on Debian 9:
+
+The JDK 10 is not pre-installed on Debian 9 by default.
+
+To install the Java Developer Kit (JDK),  execute this command:
+
+apt-get install default-jdk
+
+Method 2: Manual installation of OpenJDK 10 on Debian 9
+
+By manually installing the OpenJDK yourself, you ensure that Java 10 will be the version that is installed.
+Step 1: Download and extract the OpenJDK tarball.
+
+Go to the download page for the OpenJDK software package, and right click on the tar.gz link found to the right of the “Linux” option. Click on “Copy link address” or “Copy link”. Now, open a terminal if you are on a desktop Debian machine, or log into your Debian server using SSH. Download the tarball by entering the following command:
+
+wget <paste the download link here>
+
+Create a directory where you wish to install your OpenJDK environment:
+
+mkdir <enter the path and directory name here>
+
+Then, extract the tarball to your new directory by entering the following command:
+
+tar xvzf openjdk-10.0.1_linux-x64_bin.tar.gz -C <the path to your new directory>
+
+Once this is done, you can now add the extracted folder to your path variable. This allows you to run java commands from anywhere in the system.
+Step 2: Add the new directory to your path variable.
+
+Create a new file in /etc/profile.d/ named “jdk10.sh”. The full path should be “/etc/profile.d/jdk10.sh”. Then, enter these next two lines in the file:
+
+export JAVA_HOME="<insert install directory here>/jdk-10.0.1"
+export PATH="$PATH:${JAVA_HOME}/bin"
+
+Save the file, and then restart your desktop/server for the changes to take effect. Now, check whether your java environment has been successfully set up by trying the following command:
+
+javac -version
+
+The output should read: “javac 10.0.1”. You have now successfully installed OpenJDK on your Debian 9 system.
+Installing the Oracle version of Java 10 on Debian 9
+Step 1: Download and extract the Oracle JDK tarball.
+
+Go to the download page for the Oracle JDK software packages. First, click on “Accept License Agreement” in order to unlock the downloads. After that, right click on the file ending with “…linux-x64_bin.tar.gz”, and click on “Copy link address” or “Copy link”. Then, open a terminal if on a desktop, or SSH into your Debian server, and enter the following command:
+
+wget --header "Cookie: oraclelicense=accept-securebackup-cookie" <paste the download link here>
+
+Then, create a new directory where you would like your Java environment to be installed. Now, we can extract the Oracle JDK tarball to the new directory by entering the following command:
+
+tar xvzf jdk-10.0.1_linux-x64_bin.tar.gz -C <the path to your new directory>
+
+Once this is done, you can now add a shortcut to the extracted folder in your path variable. This allows you to run java commands as if you installed them using apt-get.
+Step 2: Add the new directory to your path variable.
+
+Create a new file in /etc/profile.d/ named “jdk10.sh”. The full path should be “/etc/profile.d/jdk10.sh”. Then, enter these next two lines in the file:
+
+export JAVA_HOME="<insert install directory here>/jdk-10.0.1"
+export PATH="$PATH:${JAVA_HOME}/bin"
+
+Save the file, and then restart your desktop/server for the changes to take effect. Now, check whether your java environment has been successfully set up by trying the following command:
+
+javac -version
+
+The output should read: “javac 10.0.1”. You have now successfully installed OpenJDK on your Debian 9 system.

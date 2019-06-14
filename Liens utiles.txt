@@ -1,3 +1,6 @@
 https://www.digitalocean.com/community/tutorials/how-to-setup-a-firewall-with-ufw-on-an-ubuntu-and-debian-cloud-server
 
 51.75.203.143
+
+
+https://blog.pascal-martin.fr/post/integration-continue-jenkins-installation-configuration/

@@ -1,0 +1,3 @@
+ng build --prod
+
+mettre le fichier /dist resultant dans la racine du page web

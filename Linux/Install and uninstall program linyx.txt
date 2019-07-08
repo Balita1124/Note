@@ -1,0 +1,11 @@
+Liste des applications
+-----------------------------
+dpkg --list
+
+Uninstall 
+-----------------------
+sudo apt-get --purge remove <appname>
+
+Unistall with dependances
+---------------------------
+sudo apt-get purge --auto-remove <appname>

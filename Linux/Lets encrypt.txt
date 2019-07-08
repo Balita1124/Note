@@ -1,0 +1,82 @@
+a plupart du temps, la simple utilisation d’un serveur mutualisé est suffisante pour vos sites en CMS, qu’ils soient sous WordPress, Joomla ou encore Prestashop. Cependant, pour améliorer les performances d’un ou des sites, lorsque les requêtes se multiplient ou que le nombre de pages ou de produits devient trop important, il peut être intéressant de passer sur un serveur dédié. Dans cette catégorie, les serveurs de type VPS (serveurs dédiés virtuels) offrent rapidité et économie. L’absence d’interface vous oblige cependant à utiliser des commandes via un client ssh. Voici comment vous y prendre pour installer un certificat Let’s Encrypt sur un VPS.
+
+Se connecter au VPS
+Installation du SSL sur le VPS
+Se repérer en ssh dans le VPS
+Installer git en ssh
+Configurer le Let’s Encrypt
+Renouvellement de Let’s Encrypt dans un VPS
+Renouvellement automatisé du certificat SSL
+Connexion à votre VPS en utilisant putty
+Dans un premier temps, il est nécessaire d’apprendre à vous connecter à votre serveur. Cette étape vous servira à de nombreuses reprises comme pour la configuration d’un FTP par exemple. Pour nous connecter, nous allons utiliser Putty, ce logiciel gratuit vous permet de vous connecter à votre serveur dédié et d’ouvrir une fenêtre de commande vous permettant d’agir directement dessus.
+
+putty vps lets encrypt
+
+Ici nous nous intéressons essentiellement au nom de l’hôte et au port. Nous allons ici établir une connexion ssh sur le serveur. Le nom de l’hôte est, la plupart du temps, sous la forme d’une adresse IP, le port sera le 22 (qui permet de définir le type de connexion, ici ssh). Une fois la connexion établie, vous aurez accès à la fenêtre de commande. Il vous faudra à présent montrer patte blanche en entrant le bon identifiant et le bon mot de passe. Vous trouverez ces informations avec votre contrat de vps ou ces dernières vous seront données par votre technicien de serveurs. Le login est souvent « root », le mot de passe est quant à lui unique. Lors de la saisie du mot de passe, rien ne s’affichera, il s’agit d’un système de protection.
+
+Une fois connecté, vous aurez droit au détail de votre serveur. Ces derniers sont en général configuré sur une distribution Linux, ici nous sommes sous Debian :
+
+vps putty connexion ssh ovh
+
+Installer le certificat let’s encrypt sur votre vps
+Une fois que vous êtes connecté, il va falloir entrer une suite de commandes qui permettront d’installer le certificat ssl. Selon le type de système d’exploitation installé, il faudra peut-être précéder ces commandes avec « sudo ». Cette abréviation signifie Super-User-Do et permet d’avoir un droit d’écriture et d’actions nécessaire sous certaines distributions Linux.
+
+Retourner à la racine et vérifier sa position
+Une connexion sur un vps en ssh ne garantit pas que vous vous retrouviez à la racine de votre serveur. Pour ce faire nous allons rentrer la commande suivante :
+
+cd /
+Attention à bien respecter les espaces (ici entre cd et /) pour que la commande soit bien comprise. Pour vérifier que vous êtes bien à la racine, une bonne méthode est de le vérifier avec un accès FTP.
+
+Nous allons créer un dossier bidon à la racine du serveur et vérifier qu’il apparaît bien en FTP. Entrez la commande suivante :
+
+mkdir truc
+Nous pouvons vérifier grâce à notre client FTP qu’à la racine de notre serveur, un dossier nommé « truc » a été créé :
+
+ftp ssh vps ovh
+
+Une fois la vérification effectuée, effacez le dossier « truc ».
+
+Installation du package git et téléchargement du Let’s Encrypt sur le VPS
+Pour aller chercher le certificat ssl, nous allons utiliser des commandes automatisées qui vont directement chercher ce dernier sur la bibliothèque de GitHub. Mais pour ce faire, il nous faut avant tout installer le package git (qui pourrait bien vous servir plus tard de toute façon). Entrez la commande suivante :
+
+apt-get install git-core
+Une fois l’installation du package effectuée, entrez la commande suivante pour télécharger Let’s Encrypt :
+
+git clone https://github.com/letsencrypt/letsencrypt
+Attention, il est important que le Let’s Encrypt soit bien installé à la racine du serveur, ce dernier pourra par la suite repérer vos différents domaines gérés sur le VPS.
+
+Configuration du Let’s Encrypt pour vos domaines installés sur le VPS
+Une fois le dossier Let’s Encrypt téléchargé à la racine du serveur, il va falloir aller dans ce dernier, pour ce faire nous allons utiliser une commande similaire à la toute première utilisée lors de ce tuto :
+
+cd letsencrypt
+Une fois dans le bon dossier entrez la commande suivante :
+
+./letsencrypt-auto
+Cette commande permet de configurer automatiquement les certificats SSL sur les différents domaines du serveur, vous devriez avec ainsi un tableau avec tous ces derniers associés à un numéro. Entrez donc le numéro des domaines à configurer séparés d’une virgule ou d’un espace.
+
+La suite de la configuration vous demandera simplement de confirmer l’installation des certificats ou de confirmer leur renouvellement si un autre certificat est détecté.
+
+Une fois cette action effectuée, vos certificats SSL Let’s Encrypt sont configurés et prêts à accueillir vos sites dans le monde du HTTPS.
+
+Renouveler un certificat SSL sur un serveur virtuel
+Les certificats SSL ont une durée de validité pour permettre une meilleure sécurisation de vos sites. Une fois la validité achevée, il vous faudra le renouveler. Pour ce faire il vous faudra retourner dans le dossier « letsencrypt » avec la commande « cd » et entrer la commande suivante :
+
+./letsencrypt-auto renew
+Les certificats à renouveler seront détectés et il vous suffira de confirmer l’action.
+
+Renouvellement automatique du certificat Let’s Encrypt
+Avec ses 90 jours de validité, le certificat Let’s Encrypt oblige donc à faire un renouvellement tous les 3 mois. Une tâche qui se résume certes à une seule commande, mais avec la gestion de plusieurs sites, il est facile d’oublier un renouvellement sur l’un d’eux. Fort heureusement, il est possible de créer des tâches automatisées sous linux, appelées cron, elles permettent de créer une action récurrente que nous calculerons.
+
+Dans un premier temps, vérifions que cron est bien installé sur le serveur :
+
+sudo apt-get install cron
+Une fois cron bien présent, vérifions qu’il est bien actif :
+
+sudo /etc/init.d/cron start
+Maintenant, nous allons ajouter une tâche qui permettra de renouveler notre certificat ssl automatiquement, en éditant le fichier crontab :
+
+sudo crontab -e
+Ajoutons la ligne suivante :
+
+30 2 * * 1 letsencrypt/letsencrypt-auto renew >> /var/log/le-renew.log
+Que fait cette tâche ? Elle renouvelle notre certificat tous les lundi à 2h30. Plus besoin donc de se soucier de la validité du SSL de nos sites !

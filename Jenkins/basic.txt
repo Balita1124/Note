@@ -1,0 +1,90 @@
+The example above shows a successful run of a basic Pipeline created in the Jenkins web UI, using
+two steps.
+// Script //
+node {
+  echo 'Hello World'
+}
+// Declarative not yet implemented /
+
+? node allocates an executor and workspace in the Jenkins environment.
+? echo writes simple string in the Console Output.
+
+NB: The first line of a Jenkinsfile should be #!/usr/bin/env groovy
+
+
+Snippet Generator
+----------------------
+
+1. Navigate to the Pipeline Syntax link (referenced above) from a configured Pipeline, or at
+localhost:8080/pipeline-syntax.
+2. Select the desired step in the Sample Step dropdown menu
+3. Use the dynamically populated area below the Sample Step dropdown to configure the selected
+step.
+4. Click Generate Pipeline Script to create a snippet of Pipeline which can be copied and pasted
+
+
+Global Variable Reference
+--------------------------------
+
+env
+====
+Environment variables accessible from Scripted Pipeline, for example: env.PATH or env.BUILD_ID.
+Consult the built-in Global Variable Reference for a complete, and up to date, list of environment
+variables available in Pipeline.
+params
+======
+Exposes all parameters defined for the Pipeline as a read-only Map, for example:
+params.MY_PARAM_NAME.
+currentBuild
+============
+May be used to discover information about the currently executing Pipeline, with properties
+such as currentBuild.result, currentBuild.displayName, etc. Consult the built-in Global Variable
+Reference for a complete, and up to date, list of properties available on currentBuild.
+
+Creating jenkins file
+----------------------
+
+// Declarative //
+pipeline {
+	agent any
+	stages {
+		stage('Build') {
+			steps {
+				echo 'Building..'
+			}
+		}
+		stage('Test') {
+			steps {
+				echo 'Testing..'
+			}
+		}
+		stage('Deploy') {
+			steps {
+				echo 'Deploying....'
+			}
+		}
+	}
+}
+// Script //
+node {
+	stage('Build') {
+		echo 'Building....'
+	}
+	stage('Test') {
+		echo 'Building....'
+	}
+	stage('Deploy') {
+		echo 'Deploying....'
+	}
+}
+Build
+--------------------------
+pipeline{
+	agent any
+	stages{
+		stage('Check version of tools'){
+			echo 'Version of node'
+			sh 'node -v'
+		}
+	}
+}

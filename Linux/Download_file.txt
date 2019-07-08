@@ -1,0 +1,9 @@
+wget "http://domain.com/directory/4?action=AttachFile&do=view&target=file.tgz" 
+
+to download the file to the current directory.
+
+wget  -P /home/omio/Desktop/ "http://thecanadiantestbox.x10.mx/CC.zip"
+
+will download the file to /home/omio/Desktop
+
+wget  -O /home/omio/Desktop/NewFileName "http://thecanadiantestbox.x10.mx/CC.zip"

@@ -1,0 +1,20 @@
+service SCRIPT COMMAND [OPTIONS]
+
+service --status-all
+
+service --help | -h | --version
+
+Here's how you run a script using service:
+
+service httpd start
+Here's how you stop an already running script using service:
+
+service sshd stop
+Here's how you fetch status for a script:
+
+service httpd status
+Here's how you restart and already-running service:
+
+service sshd restart
+
+

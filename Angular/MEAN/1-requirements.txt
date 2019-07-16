@@ -1,0 +1,21 @@
+ Before you begin, you should make sure you have installed all these prerequisites on your development machine.
+
+Git
+    Make sure you have Git installed in your system. OSX and Linux machines typically have this already installed. You can see if it is installed by typing:
+
+    $ git --version
+
+Node.js & npm
+    Download & Install Node.js and the npm package manager, if you encounter any problems, you can also use this Github Gist to install Node.js. 
+MongoDB
+    Download & Install MongoDB, and make sure it's running on the default port (27017). 
+Bower
+    You're going to use the Bower Package Manager to manage your front-end packages, in order to install it make sure you've installed Node.js and npm, then install bower globally using npm:
+
+    $ npm install -g bower
+
+Gulp
+    You're going to use the Gulp Task Runner to automate your development process. You may use Gulp for Live Reload, Linting, and SASS or LESS compilation. In order to install it make sure you've installed Node.js and npm, then install gulp globally using npm:
+
+    $ npm install -g gulp
+

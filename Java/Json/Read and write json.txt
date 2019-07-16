@@ -1,0 +1,167 @@
+JSON.simple is lightweight JSON processing library which can be used to read JSON, write JSON file. Produced JSON will be in full compliance with JSON specification (RFC4627).
+
+In this JSON tutorial, we will see quick examples to write JSON file with JSON.simple and then we will read JSON file back.
+
+Table of Contents
+
+1. Json.simple maven dependency
+2. Write JSON to file with json-simple
+3. Read JSON from file with json-simple
+4. Download Sourcecode
+
+1. Json.simple maven dependency
+Update pom.xml with json-simple maven dependency. [Link]
+
+<dependency>
+    <groupId>com.googlecode.json-simple</groupId>
+    <artifactId>json-simple</artifactId>
+    <version>1.1.1</version>
+</dependency>
+
+2. Write JSON to file in Java with json-simple
+To write JSON to file, we will be working to mainly two objects:
+
+JSONArray : To write data in json arrays. Use its add() method to add objects of type JSONObject.
+JSONObject : To write json objects. Use it’s put() method to populate fields.
+After populating above objects, use FileWriter instance to write JSON file.
+
+package com.howtodoinjava.demo.jsonsimple;
+
+import java.io.FileWriter;
+import java.io.IOException;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+public class WriteJSONExample
+{
+    @SuppressWarnings("unchecked")
+	public static void main( String[] args )
+    {
+    	//First Employee
+    	JSONObject employeeDetails = new JSONObject();
+    	employeeDetails.put("firstName", "Lokesh");
+    	employeeDetails.put("lastName", "Gupta");
+    	employeeDetails.put("website", "howtodoinjava.com");
+    	
+    	JSONObject employeeObject = new JSONObject(); 
+    	employeeObject.put("employee", employeeDetails);
+    	
+    	//Second Employee
+    	JSONObject employeeDetails2 = new JSONObject();
+    	employeeDetails2.put("firstName", "Brian");
+    	employeeDetails2.put("lastName", "Schultz");
+    	employeeDetails2.put("website", "example.com");
+    	
+    	JSONObject employeeObject2 = new JSONObject(); 
+    	employeeObject2.put("employee", employeeDetails2);
+    	
+    	//Add employees to list
+    	JSONArray employeeList = new JSONArray();
+    	employeeList.add(employeeObject);
+    	employeeList.add(employeeObject2);
+    	
+    	//Write JSON file
+    	try (FileWriter file = new FileWriter("employees.json")) {
+
+            file.write(employeeList.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+Program Output.
+
+[
+	{
+		"employee": {
+			"firstName": "Lokesh",
+			"lastName": "Gupta",
+			"website": "howtodoinjava.com"
+		}
+	},
+	{
+		"employee": {
+			"firstName": "Brian",
+			"lastName": "Schultz",
+			"website": "example.com"
+		}
+	}
+]
+
+3. Read JSON from file in Java with json-simple
+To read JSON from file, we will be using the JSON file we created in the previous example.
+
+First of all, we will create JSONParser instance to parse JSON file.
+Use FileReader to read JSON file and pass it to parser.
+Start reading the JSON objects one by one, based on their type i.e. JSONArray and JSONObject.
+package com.howtodoinjava.demo.jsonsimple;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+public class ReadJSONExample 
+{
+	@SuppressWarnings("unchecked")
+	public static void main(String[] args) 
+	{
+		//JSON parser object to parse read file
+		JSONParser jsonParser = new JSONParser();
+		
+		try (FileReader reader = new FileReader("employees.json"))
+		{
+			//Read JSON file
+            Object obj = jsonParser.parse(reader);
+
+            JSONArray employeeList = (JSONArray) obj;
+            System.out.println(employeeList);
+            
+            //Iterate over employee array
+            employeeList.forEach( emp -> parseEmployeeObject( (JSONObject) emp ) );
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+	}
+
+	private static void parseEmployeeObject(JSONObject employee) 
+	{
+		//Get employee object within list
+		JSONObject employeeObject = (JSONObject) employee.get("employee");
+		
+		//Get employee first name
+		String firstName = (String) employeeObject.get("firstName");	
+		System.out.println(firstName);
+		
+		//Get employee last name
+		String lastName = (String) employeeObject.get("lastName");	
+		System.out.println(lastName);
+		
+		//Get employee website name
+		String website = (String) employeeObject.get("website");	
+		System.out.println(website);
+	}
+}
+Program Output.
+
+[{"employee":{"firstName":"Lokesh","lastName":"Gupta","website":"howtodoinjava.com"}},{"employee":{"firstName":"Brian","lastName":"Schultz","website":"example.com"}}]
+
+Lokesh
+Gupta
+howtodoinjava.com
+
+Brian
+Schultz
+example.com

@@ -1,0 +1,154 @@
+MONGODB: A NoSql database that stores data in object-like documents. Since the data is being stored in objects, that means that objects can have all kinds of different data types, or even have hierarchy with nested objects, etc. Some documents in a collection can vary and have some or even none of the same property types as other documents stored in the same collection. This is completely different than SQL databases such as MySql where the data fields are defined in advanced by the schema, and they are all of fixed length and type. Mongoose (an ORM for MongoDB) adds a layer of abstraction allowing you to make a very English-like queries to the MongoDB. (We’ll get into details as we implement the MongoDB.) Official Site here. More info on Mongoose here.
+
+EXPRESSJS: A server built on top of NodeJS allowing you to write sever-side code purely in Javascript without the need to learn any other scripting language. Basic setup for Express literally takes just a few minutes. Node already allows you to get a server up, but Express simplifies the process with easier code. Express also lets you use middleware which simplifies managing different routes amongst other things. In a nutshell: It does a lot of the heavy-lifting for you in terms of difficult Node code and lets you get your server up fast using its easy framework. Official Site here.
+Useful introduction to Express here.
+
+AngularJS: A widely popular front-end MVC Javascript framework built by the geniuses at Google. There are many advantages of using Angular, but one of my favorites is 2-way data binding whereby anytime data is changes anywhere then the references to that data will automatically update everywhere in the application. Official site here.
+
+NODEJS: Server-side (back-end) JS framework (although technically not defined as a framework). NodeJS lets you create a basic web server and networking tools along with a bunch of modules that come out out of the box that let you handle core functionality. The folks that built NodeJS define it as ‘a JavaScript runtime built on Chrome’s V8 JavaScript engine. NodeJS uses an event-driven, non-blocking I/O model that makes it lightweight and efficient. NodeJS’ package ecosystem, NPM, is the largest ecosystem of open source libraries in the world’. Go here for more info.
+
+MVC FRAMEWORK: An easy way to breakup your Javascript code into a Model section that manipulates data, a View section that renders content to the browser, and a Controller section that contains the logic behind how to process changes to the data and manipulate the view as a result.
+
+
+Steps to Build a MEAN Web Application
+=============================================
+
+Step 1: Setting up Node/Express server
+-------------------------------------
+
+1 - Initialize node project
+
+$ mkdir myapp
+$ npm init -y
+
+2 - setup dependencies and scripts in packages.json
+
+
+{
+  "name": "CrowdCart",
+  "version": "0.0.0",
+  "description": "Shopping Web App",
+  "author": "Team Dancing-Penguin",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "angular-ui-bootstrap": "^2.1.3",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.4.3",
+    "browser-sync": "^1.5.7",
+    "chai": "^3.4.1",
+    "clone-stats": "0.0.1",
+    "express": "^4.4.5",
+    "jwt-simple": "^0.2.0",
+    "mocha": "^2.3.4",
+    "mongoose": "^4.1.0",
+    "morgan": "^1.1.1",
+    "request": "^2.36.0",
+    "sinon": "^1.17.2",
+    "supertest": "^0.10.0"
+  }
+}
+
+3 install dependencies with following commands:
+
+$ npm install
+
+4 - Setup file directory
+	4 - 1 Create client and server folder
+	4 - 2 Create index.js in root folder
+	
+5 - Start Express server
+
+	5 - 1 Create following files:
+	
+	- server/config/helpers.js
+	- server/config/middleware.js
+	- server/config/routes.js
+	- server/server.js
+
+	5 - 2 setting up server.js
+	
+	var express = require('express');
+	var middleware = require('./config/middleware.js');
+	var routes = require('./config/routes.js');
+
+
+	// start express
+	var app = express();
+
+	// set middleware
+	middleware(app, express);
+
+	// set routes
+	routes(app, express);
+
+	// export app
+	module.exports = app;
+	
+6 - Setup middleware
+
+	// require morgan, bodyParser
+	var morgan = require('morgan');
+	var bodyParser = require('body-parser');
+
+	// export function
+	module.exports = function(app, express) {
+
+	  // use morgan
+	  app.use(morgan('dev'));
+
+	  // use bodyParser
+	  app.use(bodyParser.urlencoded({extended: true}));
+	  app.use(bodyParser.json());
+
+	  // use express.static to serve client folder
+	  app.use(express.static(__dirname + '/../../client'));
+	};
+
+7 - Setup routes
+
+// require userHandler, listHandler
+var userHandler = require('../users/userHandler.js');
+var listHandler = require('../lists/listHandler.js');
+
+// export function
+module.exports = function(app, express){
+
+  // TODO:  Coordinate with frontend on
+  //        the request url names ('/api/...')
+
+  // POST - signin
+  app.post('/api/signin', userHandler.signin);
+  // POST - signup
+  app.post('/api/signup', userHandler.signup);
+
+  // POST - addList
+  app.post('/api/lists', listHandler.addList);
+  // GET - getList (single list)
+  app.get('/api/list/:id', listHandler.getOneList);
+  // GET - getLists (users lists)
+  app.get('/api/lists/:id', listHandler.getLists);
+  // PUT - for updating list
+  app.put('/api/lists', listHandler.updateList);
+  // DELETE - deletes a single list
+  app.delete('/api/lists/:id', listHandler.deleteList);
+  // GET - getAllLists
+  app.get('/api/crowd', listHandler.getAllLists);
+  // GET - getJobs (users accepted jobs)
+  app.get('/api/jobs/:id', listHandler.getJobs);
+  // POST - getJobs (user updates job when completed)
+  app.post('/api/jobs', listHandler.updateJobStatus);
+  // POST - updateStatus (reflects when jobs/lists are assigned)
+  app.post('/api/status', listHandler.updateStatus);
+
+  // Will probably need more routes over time
+
+};
+
+
+
+
+

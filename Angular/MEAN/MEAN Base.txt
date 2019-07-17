@@ -1,0 +1,216 @@
+Setting up frontend
+=========================
+1 - Create angular app
+
+$ ng new mean-crud
+
+2 - Setup dependencies
+
+dependencies
+
+npm install --save @angular/cdk @angular/http @angular/material @auth0/angular-jwt bcryptjs body-parser bootstrap dotenv express font-awesome hammerjs jquery jsonwebtoken mongoose morgan popper.js rxjs-compat tether 
+
+devDependencies
+
+npm install --save-dev @types/express @types/node chai chai-http codelyzer concurrently mocha nodemon
+
+3 - install dependecies
+
+$ npm install
+
+4 - Create .env file for the variable env
+
+MONGODB_URI=mongodb://localhost:27017/db_hr
+MONGODB_TEST_URI=mongodb://localhost:27017/test
+SECRET_TOKEN=helloshohelrana
+
+5 - Setup script
+
+  "scripts": {
+    "ng": "ng",
+    "build": "ng build --prod",
+    "start": "node dist/server/app.js",
+    "predev": "tsc -p server",
+    "dev": "concurrently \"mongod\" \"ng serve --proxy-config proxy.conf.json --open\" \"tsc -w -p server\" \"nodemon dist/server/app.js\"",
+    "prod": "concurrently \"mongod\" \"ng build --aot --prod && tsc -p server && node dist/server/app.js\"",
+    "test": "ng test",
+    "testbe": "tsc -p server && mocha dist/server/test --exit",
+    "lint": "ng lint",
+    "lintbe": "tslint server/**/**.ts{,x}",
+    "e2e": "ng e2e"
+  },
+
+Setting up backend
+========================
+1 - Create directory named "server" in root
+2 - create file app.ts and routes.ts inside "server" directory
+3 - Setup app.ts
+
+import * as bodyParser from 'body-parser';
+import * as dotenv from 'dotenv';
+import * as express from 'express';
+import * as morgan from 'morgan';
+import * as mongoose from 'mongoose';
+import * as path from 'path';
+
+import setRoutes from './routes';
+
+const app = express();
+dotenv.load({ path: '.env' });
+app.set('port', (process.env.PORT || 3000));
+
+app.use('/', express.static(path.join(__dirname, '../public')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(morgan('dev'));
+mongoose.connect(process.env.MONGODB_URI);
+const db = mongoose.connection;
+(<any>mongoose).Promise = global.Promise;
+
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+
+  setRoutes(app);
+
+  app.get('/*', function(req, res) {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+  });
+
+  app.listen(app.get('port'), () => {
+    console.log('Mean Stack listening on port ' + app.get('port'));
+  });
+
+});
+
+export { app };
+
+4 - Setup routes
+
+import * as express from 'express';
+
+import EmployeeCtrl from './controllers/employee';
+
+export default function setRoutes(app) {
+
+  const router = express.Router();
+
+  const employeeCtrl = new EmployeeCtrl();
+
+  // Employee
+  router.route('/employees').get(employeeCtrl.getAll);
+  router.route('/employees/count').get(employeeCtrl.count);
+  router.route('/employee').post(employeeCtrl.insert);
+  router.route('/employee/:id').get(employeeCtrl.get);
+  router.route('/employee/:id').put(employeeCtrl.update);
+  router.route('/employee/:id').delete(employeeCtrl.delete);
+
+  // Apply the routes to our application with the prefix /api
+  app.use('/api', router);
+
+}
+
+5 - Setup base controller
+
+abstract class BaseCtrl {
+
+  abstract model: any;
+
+  // Get all
+  getAll = (req, res) => {
+    this.model.find({}, (err, docs) => {
+      if (err) { return console.error(err); }
+      res.json(docs);
+    });
+  }
+
+  // Count all
+  count = (req, res) => {
+    this.model.count((err, count) => {
+      if (err) { return console.error(err); }
+      res.json(count);
+    });
+  }
+
+  // Insert
+  insert = (req, res) => {
+    const obj = new this.model(req.body);
+    obj.save((err, item) => {
+      // 11000 is the code for duplicate key error
+      if (err && err.code === 11000) {
+        res.sendStatus(400);
+      }
+      if (err) {
+        return console.error(err);
+      }
+      res.status(200).json(item);
+    });
+  }
+
+  // Get by id
+  get = (req, res) => {
+    this.model.findOne({ _id: req.params.id }, (err, obj) => {
+      if (err) { return console.error(err); }
+      res.json(obj);
+    });
+  }
+
+  // Update by id
+  update = (req, res) => {
+    this.model.findOneAndUpdate({ _id: req.params.id }, req.body, (err) => {
+      if (err) { return console.error(err); }
+      res.sendStatus(200);
+    });
+  }
+
+  // Delete by id
+  delete = (req, res) => {
+    this.model.findOneAndRemove({ _id: req.params.id }, (err) => {
+      if (err) { return console.error(err); }
+      res.sendStatus(200);
+    });
+  }
+}
+
+export default BaseCtrl;
+
+6 - setup controller
+
+import Employee from '../models/employee';
+import BaseCtrl from './base';
+
+export default class EmployeeCtrl extends BaseCtrl {
+  model = Employee;
+}
+
+7 - Setting up Model
+
+import * as mongoose from 'mongoose';
+
+const employeeSchema = new mongoose.Schema({
+  employeeID: String,
+  shiftStartTime: String,
+  shiftEndTime: String,
+  overTimeAmountPerHour: Number,
+  salary: Number,
+  createUserID: Number
+});
+
+const Employee = mongoose.model('Employee', employeeSchema);
+
+export default Employee;
+
+8 - create tsconfig.json in server
+
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/server",
+    "baseUrl": "",
+    "module": "commonjs"
+  }
+}
+
+
+

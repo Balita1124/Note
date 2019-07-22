@@ -1,0 +1,72 @@
+1. Rebase Git workflow
+==========================
+Here’s the rebasing workflow:
+
+ - Checkout master: 
+
+git checkout master
+
+ - Make sure master is up to date: 
+
+git pull
+
+ - Checkout feature branch:
+
+git checkout feature-branch
+
+ - Rebase master:
+
+git rebase master
+
+If you encounter a merge issue, open your merge tool:
+
+ - git mergetool
+
+Fix merge issues
+Continue with rebase:
+
+ - git rebase --continue
+
+If you encounter more merge issues, follow Step 5-7
+If you make a mistake while merging, abort the merge to discard all changes you’ve made, effectively going back to Step 3:
+
+ - git rebase --abort
+
+When you have nothing left to merge, push changes to the remote feature branch:
+
+ - git push -f
+
+After your changes have been reviewed and approved, merge to master. 
+
+
+2. git add -p
+====================================
+commit specific file
+
+
+3. Keeping your branches tidy
+=================================
+- Rename branch
+
+Rename a branch while currently not in the branch to be renamed:
+
+git branch -m oldName newName
+
+Rename the current branch:
+
+git branch -m newName
+
+- Delete old local branches
+
+Time to delete this baggage. But only if you’re absolutely sure you don’t need them anymore.
+
+git branch -d branchName
+
+
+4. Git reset-hard
+
+Do you sometimes just mess up on a local branch and want to abort all changes? Me too.
+
+The git reset –hard  command wipes all your staged and uncommitted changes so you can start again.
+
+Be careful! As with most Git commands, you have to know exactly what you’re doing. This is a great resource to understand the inner workings of this command.

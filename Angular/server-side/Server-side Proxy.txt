@@ -1,0 +1,61 @@
+NB : 
+ - Angular CLI uses webpack-dev-server as the development server
+ - The webpack-dev-server makes use of the powerful http-proxy-middleware package
+ - http-proxy-middleware package allows us to send API requests on the same domain when we have a separate API back end development server.
+
+Enabling Server-Side Proxy on Angular CLI Apps Which Have Not Been Ejected
+===========================================================================
+Step 1:
+---------
+Create a file called proxy.conf.json next to our project’s package.json.
+
+Step 2:
+--------------
+Add the following contents to the newly created proxy.conf.json file:
+
+{
+  "/api": {
+    "target": "http://localhost:3000",
+    "secure": false
+  }
+}
+
+Step 3:
+--------------
+Edit the package.json file’s start script to be:
+
+"start": "ng serve --proxy-config proxy.conf.json",
+
+Step 4: 
+------------
+Relaunch the npm start process to make our changes effective.
+
+Enabling Server-Side Proxy on Angular CLI Apps Which Have Been ejected
+=========================================================================
+
+Step 1: 
+--------
+Open webpack.config.js file and locate the devServer section:
+
+"devServer": {
+  "historyApiFallback": true
+}
+
+Step 2: 
+-------------
+Replace the devServer section with the contents below:
+
+"devServer": {
+  "historyApiFallback": true,
+  "proxy": {
+    "/api": {
+      "target" : "http://localhost:3000",
+      "secure": false
+    }
+  }
+}
+
+
+
+
+

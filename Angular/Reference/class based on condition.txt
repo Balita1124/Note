@@ -1,0 +1,22 @@
+Angular 2,..,7 provides several ways to add classes conditionally:
+
+type one
+
+[class.my-class]="step=='step1'"
+
+type two
+
+[ngClass]="{'my-class': step=='step1'}"
+
+and multiple option:
+
+[ngClass]="{'my-class': step=='step1', 'my-class2':step=='step2' }"
+
+type three
+
+[ngClass]="{1:'my-class1',2:'my-class2',3:'my-class4'}[step]"
+
+type four
+
+[ngClass]="(step=='step1')?'my-class1':'my-class2'"
+

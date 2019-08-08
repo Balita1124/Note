@@ -83,8 +83,10 @@ pipeline{
 	agent any
 	stages{
 		stage('Check version of tools'){
-			echo 'Version of node'
-			sh 'node -v'
+			steps{
+				echo 'Version of node'
+				sh 'node -v'
+			}
 		}
 	}
 }

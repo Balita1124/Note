@@ -1,0 +1,57 @@
+Setup Your Angular Workspace
+===============================
+$ ng new my-app --routing
+
+$ cd my-app
+$ ng serve
+
+Create your Sub Applications
+=================================
+
+$ ng generate application app1 –-routing
+
+$ ng generate application app2 –-routing
+
+projects/app1/src/app/app.component.ts
+-------------------------------------------
+
+export class AppComponent {
+ title = ‘app1’;
+}
+
+projects/app2/src/app/app.component.ts
+------------------------------------------
+
+export class AppComponent {
+  title = 'app2';
+}
+
+Run project
+----------------------
+$ ng serve –-project app1
+
+$ ng serve –-project=app2
+
+Injecting Sub Apps into Main application
+================================================
+app.module.ts (app1)
+---------------
+
+imports: [
+  BrowserModule,
+  AppRoutingModule
+],
+
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }

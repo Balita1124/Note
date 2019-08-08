@@ -1,0 +1,6 @@
+SELECT REPLACE(t.column, 'est1', 'rest1')
+  FROM MY_TABLE t
+If you want to update the values in the table, use:
+
+UPDATE MY_TABLE t
+   SET column = REPLACE(t.column, 'est1', 'rest1')

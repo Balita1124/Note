@@ -1,0 +1,17 @@
+Creating a Heroku App
+
+In this section you will setup a new Heroku app. In the next step you will add a database to this app. If you want to use an existing app you can skip to the next section.
+
+    Create a new Heroic account or sign in into an existing account.
+    Go to your apps dashboard: https://dashboard.heroku.com/apps.
+    To create a new app, click New > Create new app (right-hand side).
+
+Creating a Database
+
+Now that you have created a Heroku app, the new step is to add a database to this app.
+
+    Inside the newly created app, switch to Resources tab.
+    Under Add-ons, search for Heroku Postgres and then select from the suggested list.
+    In the popup shown, select free Hobby Dev - Free plan, click Provision.
+    Click on the just added database (Heroku Postgres :: Database).
+    Scroll towards the bottom of the page and click on View Credentials button. You will see the database credentials you will need to use when connecting to this database from API Express. 

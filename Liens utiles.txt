@@ -4,3 +4,6 @@ https://www.digitalocean.com/community/tutorials/how-to-setup-a-firewall-with-uf
 
 
 https://blog.pascal-martin.fr/post/integration-continue-jenkins-installation-configuration/
+
+
+https://www.javaguides.net/2018/10/free-open-source-projects-using-spring-boot.html

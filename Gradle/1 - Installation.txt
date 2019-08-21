@@ -1,0 +1,15 @@
+1 - Telecharger a https://gradle.org/next-steps/?version=5.5.1&format=bin
+2 - Dezziper dans C:\Gradle
+3 - Ajouter dans l'environnement de variable
+
+This PC (or Computer) icon, then click Properties -> Advanced System Settings -> Environmental Variables.
+
+Under System Variables select Path, then click Edit. Add an entry for C:\Gradle\gradle-5.5.1\bin. Click OK to save.
+
+4 - Verifier l'installation
+
+$ gradle -v
+
+5 - Mettre a jour avec gradle wrapper
+
+$ ./gradlew wrapper --gradle-version=5.5.1 --distribution-type=bin

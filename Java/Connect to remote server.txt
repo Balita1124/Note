@@ -1,0 +1,48 @@
+package com.dso.migration;
+
+import com.jcraft.jsch.*;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Scanner;
+
+
+/**
+ * Hello world!
+ */
+public class App {
+    public static void main(String[] args) {
+        String user = "*******";
+        String password = "********";
+        String host = "****************";
+        int port = 22;
+        String remoteFile = "/mnt/nfs/documents/cvgv3/DB/310808768/201907/4451296304.pdf";
+
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(user, host, port);
+            session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
+            System.out.println("Establishing Connection...");
+            session.connect();
+            System.out.println("Connection established.");
+            System.out.println("Crating SFTP Channel.");
+            ChannelSftp sftpChannel = (ChannelSftp) session.openChannel("sftp");
+            sftpChannel.connect();
+            System.out.println("SFTP Channel created.");
+
+
+            InputStream inputStream = null;
+            Boolean exist = false;
+            try {
+                inputStream = sftpChannel.get(remoteFile);
+                exist = true;
+            } catch (SftpException e) {
+            }
+
+            System.out.println(remoteFile + " exist = " + exist);
+
+        } catch (JSchException e) {
+            e.printStackTrace();
+        }
+    }
+}

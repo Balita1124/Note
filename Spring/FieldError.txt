@@ -1,0 +1,1 @@
+You need to cast ObjectError to FieldError and then you can retrieve the name of the affected field by calling getField().

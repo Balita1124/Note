@@ -1,0 +1,253 @@
+Definition d'un JUnit test
+=====================================
+Un Junit test est une methode contenu dans une classe qui est utilisé uniquement pour le test: Cette classe est appelé Class Test.
+
+Pour definit cette methode, il faut juste l'annoter avec l'annotation @Test
+
+Exemple
+====================================
+MyTests.java
+----------------------
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
+public class MyTests {
+
+    @Test
+    public void multiplicationOfZeroIntegersShouldReturnZero() {
+        MyClass tester = new MyClass(); // MyClass is tested
+
+        // assert statements
+        assertEquals(0, tester.multiply(10, 0), "10 x 0 must be 0");
+        assertEquals(0, tester.multiply(0, 10), "0 x 10 must be 0");
+        assertEquals(0, tester.multiply(0, 0), "0 x 0 must be 0");
+    }
+}
+
+
+pom.xml
+---------------
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+
+Junit Naming Convention
+===============================
+- Le nom de la classe doit se terminer par "Test"
+- Utiliser "Should" dans le nom d'une methode
+
+Ex: ordersShouldBeCreated,  menuShouldGetActive
+
+Une autre approche est d'utiliser  "Given[ExplainYourInput]When[WhatIsDone]Then[ExpectedResult]"
+
+
+JUnit naming convention for maven
+========================================
+On doit utiliser le suffixe "Test" comme nom de classe. Maven build va automatiquement inclure la classe dans son test scope par l'intermediaire de surfire plugin
+
+Executer le test a partir d'une ligne de commande
+==================================================
+MyTestRunner.java
+--------------------------
+package de.vogella.junit.first;
+
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+
+public class MyTestRunner {
+  public static void main(String[] args) {
+    Result result = JUnitCore.runClasses(MyClassTest.class);
+    for (Failure failure : result.getFailures()) {
+      System.out.println(failure.toString());
+    }
+  }
+}
+
+UTILISATION DE JUNIT 4
+************************************
+Definition d'une methode test
+=====================================
+import org.junit.*
+-------------------
+importation des statements
+
+@Test
+-----------
+Indique que c'est une methode test
+@Before
+---------------
+Executé avant chaque test. C'est utilisé pour preparer l'environnement test
+@After
+----------------
+Executé apres chaque test. C'est utilisé pour cleanup l'env test
+
+@BeforeClass
+---------------------
+Executé avant le debut de tous les test. utilisé pour se connecter a la BDD par exemple (La methode doit etre static)
+
+@AfterClass
+--------------------------
+Executé apres la fin du test. utilisé pour se deconnecté de la BDD par exemple
+
+@Ignore or @Ignore("Why disabled")
+---------------------------------
+Utilisé pour desactivé un test
+
+@Test (expected = Exception.class)
+-----------------------
+Le test fail si la methode ne lance pas l'exception specifié
+
+@Test(timeout=100)
+----------------------
+fail si la methode depasse le timeout specifié
+
+
+Asserts Statements
+==============================
+fail([message])
+--------------------
+Forcer le fail dans une methode
+
+assertTrue([message,] boolean condition)
+----------------------------------------
+Verifie si la condition est vraie
+
+assertFalse([message,] boolean condition)
+--------------------------------------
+Verifie si la condition est fausse
+
+assertEquals([message,] expected, actual)
+------------------------------------------
+compare deux valeurs.
+
+assertEquals([message,] expected, actual, tolerance)
+-------------------------------------------------
+compare deux float, avec tolerance de sur le nombre de decimal
+
+assertNull([message,] object)
+----------------------------------
+Verifie si l'objet est null
+
+assertNotNull([message,] object)
+------------------------------------
+Verifie si l'objet n'est pas null
+
+assertSame([message,] expected, actual)
+--------------------------------------------
+Verifie si la variable pointe sur le meme objet
+
+assertNotSame([message,] expected, actual)
+---------------------------------------------
+Verifie si l'objet pointe sur des objets differentes
+
+
+Test Suites
+============================
+C'est un regroupement de un ou plusieurs test qui peut etre executer dans un ordre specifique.
+
+Un test suite peut contenir d'autres test suites
+
+Exemple:
+
+
+
+package com.vogella.junit.first;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+@RunWith(Suite.class)
+@SuiteClasses({
+        MyClassTest.class,
+        MySecondClassTest.class })
+
+public class AllTests {
+
+}
+
+Desactiver un test
+================================================
+
+Assume.assumeFalse(System.getProperty("os.name").contains("Linux"));
+
+Parametrer un test
+===========================
+
+
+package testing;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.runners.Parameterized.*;
+
+@RunWith(Parameterized.class)
+public class ParameterizedTestFields {
+
+    // fields used together with @Parameter must be public
+    @Parameter(0)
+    public int m1;
+    @Parameter(1)
+    public int m2;
+    @Parameter(2)
+    public int result;
+
+
+    // creates the test data
+    @Parameters
+    public static Collection<Object[]> data() {
+        Object[][] data = new Object[][] { { 1 , 2, 2 }, { 5, 3, 15 }, { 121, 4, 484 } };
+        return Arrays.asList(data);
+    }
+
+
+    @Test
+    public void testMultiplyException() {
+        MyClass tester = new MyClass();
+        assertEquals("Result", result, tester.multiply(m1, m2));
+    }
+
+
+    // class to be tested
+    class MyClass {
+        public int multiply(int i, int j) {
+            return i *j;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

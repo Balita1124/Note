@@ -1,0 +1,6 @@
+Les starters a utiliser
+----------------------------
+Web
+JPA
+H2
+Lombok

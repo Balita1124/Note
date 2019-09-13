@@ -60,3 +60,5 @@ styleUrls
 NB: Le script tag <script> n'est pas autorisés dans un component
 
 
+Class Component
+--------------------------------------

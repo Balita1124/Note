@@ -1,3 +1,23 @@
 1 - Creation d'un projet a partir d'un Maven Archetype
 =========================================================
 //Si on a besoin de la derniere version de jersey, il faut ajouter ceci dans le POM
+
+<repository>
+    <id>snapshot-repository.java.net</id>
+    <name>Java.net Snapshot Repository for Maven</name>
+    <url>https://maven.java.net/content/repositories/snapshots/</url>
+    <layout>default</layout>
+</repository>
+
+Creation d'un projet qui va s'executer dans un container Grizzly
+-----------------------------------------------------------------
+mvn archetype:generate -DarchetypeArtifactId=jersey-quickstart-grizzly2 -DarchetypeGroupId=org.glassfish.jersey.archetypes -DinteractiveMode=false -DgroupId=com.example -DartifactId=simple-service -Dpackage=com.balita -DarchetypeVersion=2.28
+
+executer le test
+-------------------
+mvn clean test
+
+executer l'application
+----------------------
+mvn exec:java
+

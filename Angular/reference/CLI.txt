@@ -1,3 +1,12 @@
+Avantages
+----------------------------------
+- Permet de creer une application angular
+- Permet de lancer une application angular avec un live reloading changes
+- Generer des codes dans l'application
+- Permet de lancer les test
+- Permet de builder les applications pour le deploiement
+- Permet de deployer une application
+
 Installation de cli
 -------------------------
 	# npm install -g angular-cli

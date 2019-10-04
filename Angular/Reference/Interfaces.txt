@@ -1,5 +1,5 @@
-Exemple basique d'une interface
-================================
+Interface en typescript peut s'appliquer au fnct
+==================================================
 interface SearchFunc {
 	(source: string, subString: string): boolean;
 }
@@ -16,3 +16,54 @@ mySearch = function(source: string, subString: string) {
 	}
 }
 
+Interface en typescript peut s'appliquer au proprités
+=====================================================
+
+interface LabelledClothing {
+	label: string;
+	size: number;
+	color? : string;
+}
+
+function printLabel(labelled: LabelledClothing) {
+	console.log(labelled.label + " " + labelled.size);
+}
+
+var myObj = {size: 10, label: "Dress"};
+printLabel(myObj);
+
+Interface en typescript peut s'appliquer aux array
+=====================================================
+
+interface StringArray {
+	[index: number]: string;
+}
+var myArray: StringArray;
+myArray = ["Bob", "Fred"];
+
+Class peut implementer une interface
+=======================================
+
+interface ClockInterface {
+	currentTime: Date;
+	setTime(d: Date);
+}
+class Clock implements ClockInterface {
+	currentTime: Date;
+	setTime(d: Date) {
+		this.currentTime = d;
+	}
+	constructor(h: number, m: number) { }
+}
+
+une interface peut herité d'autres interfaces
+===============================================
+interface Shape {
+	color: string;
+}
+interface Square extends Shape {
+	sideLength: number;
+}
+var square = <Square>{};
+square.color = "blue";
+square.sideLength = 10;

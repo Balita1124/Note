@@ -43,3 +43,33 @@ NB:
 - une classe peut implementer une interface
 - on peut utiliser les modifiers: public et private sur les attributs ou methodes
 
+
+Data binding
+--------------------
+[Data Binding Target] = "Template Expression"
+
+
+
+<img [src] = "imageUrl"> Sets image source to property imageUrl in the Model.
+<div [ngClass] =
+"{selected: isSelected}">
+</div>
+Sets CSS class according to property isSelected in the
+Model.
+<car-detail
+[car]="selectedCar">
+</car-detail>
+Sets the car attribute of the car-detail to property
+selectedCar in the Model. The car-detail could be a
+component, and this would pass information from the current
+template to that component using the car attribute.
+<button [style.color]
+= "isSpecial ? 'red' :
+'green'">
+Sets the button color according to property isSpecial in
+the Model.
+
+
+Event Handling
+-------------------------------
+(Target Event) = "Template Statement"

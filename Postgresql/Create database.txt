@@ -1,0 +1,5 @@
+CREATE DATABASE economia
+    WITH 
+    OWNER = balita
+    ENCODING = 'UTF8'
+    CONNECTION LIMIT = -1;

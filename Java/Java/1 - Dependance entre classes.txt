@@ -1,0 +1,20 @@
+
+public class Y {
+    public Y() {
+        System.out.println("La classe courant est dependant de Y");
+    }
+}
+
+----
+public class X {
+
+    public static void main(String[] args){
+        Y y = new Y();
+    }
+}
+
+
+
+---------
+X est dependant de Y
+Y est une dependance de X

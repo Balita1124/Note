@@ -1,6 +1,6 @@
 Créer un projet maven
 ======================================
-mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.mycompany.app -DartifactId=my-app
+mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.balita.java11 -DartifactId=java11
 
 Compiler un projet maven
 ========================================

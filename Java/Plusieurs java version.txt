@@ -1,0 +1,8 @@
+# fichier .bat
+@echo off
+echo Setting JAVA_HOME
+set JAVA_HOME=C:\j2sdk1.4.2_12
+echo setting PATH
+set PATH=C:\j2sdk1.4.2_12\bin;%PATH%
+echo Display java version
+java -version

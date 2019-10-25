@@ -1,0 +1,84 @@
+Interfances
+=======================
+Une interface est une classe abstraite dont toutes les méthodes sont abstraites et dont tous les attributs sont constants (des constantes, voir le mot-clé final)
+
+- Liste de methode contenant seulement la signature
+- Paut etre implementer par une ou plusieurs classes
+- Une classe peut implementer plusieurs interfaces (heritage multiple en les separant par des virgules)
+- Toutes les methodes d'une interface sont implicitement abastraites
+- Une interface n'a pas de constructeurs
+- Une interface ne peux avoir de champs sauf si ceux-ci sont statiques
+- Une interface peut etre etendue par une ou plusieurs autres
+
+Exemple:
+==============
+package cours;
+
+public interface Vehicule {
+	
+	void rouler();
+	
+	void freiner();
+	
+}
+
+
+
+package cours;
+
+public class Velo implements Vehicule {
+	//Champs
+	
+	private String marque;
+	private int rayonRoue;
+	
+	//Constructeurs
+	
+	public Velo(String marque, int rayonRoue)
+	{
+		this.marque = marque;
+		this.rayonRoue = rayonRoue;
+	}
+	
+	//Methodes
+
+	public void rouler() {
+		//Coder ici la manière dont le vélo roule
+	}
+	
+	public void freiner() {
+		//Coder ici la manière dont le vélo freine
+	}
+
+        //Autres méthodes propres à Velo
+}
+
+
+package cours;
+
+public class Auto implements Vehicule {
+	//Champs
+	
+	private String marque;
+	private int poids;
+	
+	//Constructeurs
+	
+	public Auto(String marque, int poids)
+	{
+		this.marque = marque;
+		this.poids = poids;
+	}
+	
+	//Methodes
+
+	public void rouler() {
+		//Coder ici la manière dont l'auto roule
+	}
+	
+	public void freiner() {
+		//Coder ici la manière dont l'auto freine
+	}
+       
+        //Autres méthodes propres à Auto.
+}

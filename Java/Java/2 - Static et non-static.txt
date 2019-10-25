@@ -1,0 +1,35 @@
+Static
+=========================
+une variable static est une variable qui appartient a une classe. 
+elle est partagée entre les objets: si un objet modifie la valeur, les autres aussi verrront le changement
+
+Non-static
+============================
+
+une variable non static est une variable qui appartient a un objet. La variable a sa propre valeur pour chaque objet
+
+
+Exemple
+=====================
+
+
+public class StaticTest {
+    private static int x;
+    private int y;
+
+    public StaticTest(int y) {
+        this.x = y;
+        this.y = y;
+    }
+    public void print(){
+        System.out.println("x = " + x + ", y = " + y);
+    }
+
+    public static void main(String[] args){
+        StaticTest s1 = new StaticTest(1);
+        s1.print();
+        StaticTest s2 = new StaticTest(2); // object s2 change the value of the static variable
+        s2.print();
+        s1.print();
+    }
+}

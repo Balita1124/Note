@@ -26,8 +26,28 @@ Les capacités standard d'une application spring batch:
 Spring batch peut interagir avec les scheduler mais ne peut pas remplacer un scheduler
 
 les fonctionnalités les plus importantes de spring batch:
-	- Supporte plusieurs type de fichers, en incluant les fixed length, delimited files, XML, et les plusieurs base
-	de données à travers le jdbc
-	- Reesaie automatic apres l'erreur
-	- Job control language to monitor and perform common operations such as job start, stop, suspend, and cancel
-	
+
+• Support for multiple file formats, including fixed length, delimited files, XML
+and common database access using JDBC, and other prominent frameworks
+• Automatic retry after failure
+• Job control language to monitor and perform common operations such as job
+start, stop, suspend, and cancel
+• Tracking status and statistics during the batch execution and after completing
+the batch processing
+• Support for multiple ways of launching the batch job, including script, HTTP,
+and message
+• Support to run concurrent jobs
+• Support for services such as logging, resource management, skip, and
+restarting the processing
+
+Infrastructure de Spring Batch
+=========================================
+* Couche Application:  contient les codes du dev pour lancer les jobs en utilisant Spring Batch
+* Couche Batch core: contient les runtime classes comme le JobLauncher, Job, Step, necessaire pour lancer et controller les job.
+* Couche batch infrastructure: contient les reader, les writers et services commun
+
+Les composants spring batch:
+
+- JobLauncher: interface responsable du lancement d'un job. Quand le job est lancé, JL verifie le JobRepository
+- Job: le batch a executer. il peut etre  configurer dans un xml ou en code java
+- 

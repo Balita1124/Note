@@ -1,1 +1,5 @@
 df -h
+
+Taille du fichier d'un repertoire
+---------------------------------------
+du -sh ./*

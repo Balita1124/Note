@@ -1,0 +1,320 @@
+How to build an Angular 8 app from scratch in 11 easy steps
+-----------------------------------------------------------------
+# Prerequists
+
+- node 8.9+
+- npm 5.5.1+
+- nvm
+
+Step 1 — Installing Angular CLI 8   (angular/cli v8.3.2)
+===========================================================
+
+$ npm install -g @angular/cli
+
+Step 2 — Creating your Angular 8 Project
+==============================================
+
+$ cd ~  
+$ ng new angular-example
+
+To run development server : 
+
+$ ng serve
+
+Open a web browser and go to the adress : http://localhost:4200/
+
+Step 3 — Adding Angular HttpClient
+======================================
+
+Open the  src/app/app.module.ts  file and make the following changes:
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { HttpClientModule } from '@angular/common/http';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Step 4 — Creating UI Components
+======================================
+
+$ cd ~/angular-example  
+$ ng g component home
+$ ng g component about
+
+Next, open the  src/app/about/about.component.html  file and add the following code:
+
+<p style="padding: 15px;"> This is the about page that describes your app</p>
+
+Step 5 — Adding Routing
+=======================================
+Go to the  src/app/app-routing.module.ts  file and add the following routes:
+
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+import { HomeComponent } from './home/home.component';
+import { AboutComponent } from './about/about.component';
+
+
+const routes: Routes = [
+  { path: '', redirectTo: 'home', pathMatch: 'full'},
+  { path: 'home', component: HomeComponent },
+  { path: 'about', component: AboutComponent },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+Step 6 — Adding Angular Material
+======================================
+Go to your terminal and run this command from the root of your project:
+
+$ ng add @angular/material
+
+Open the  src/app/app.module.ts  file and add the following imports:
+
+import { MatToolbarModule,
+  MatIconModule,
+  MatCardModule,
+  MatButtonModule,
+  MatProgressSpinnerModule } from '@angular/material';
+  
+  
+  Next, add these modules to the  imports  array:
+  
+  @NgModule({
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    AboutComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule,
+    BrowserAnimationsModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatCardModule,
+    MatProgressSpinnerModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Next, open the  src/app/app.component.html  file and update it as follows:
+
+<mat-toolbar color="primary">  
+<h1>  
+My Angular Store  
+</h1>  
+<button mat-button routerLink="/">Home</button>  
+<button mat-button routerLink="/about">About</button></mat-toolbar><router-outlet></router-outlet>
+
+Step 7 — Mocking a REST API
+=====================================
+ installing  json-server  from npm in your project:
+$ cd ~/angular-example
+$ npm install --save json-server 
+
+Next, create a  server  folder in the root folder of your Angular project:
+$ mkdir server
+$ cd server
+
+In the  server  folder, create a  database.json  file and add the following JSON object:
+
+{
+    "products": []
+}
+
+install Faker.js  from npm using the following command:
+
+$ cd ..
+$ npm install faker --save
+
+Now, create a  generate.js  file and add the following code:
+
+var faker = require('faker');
+
+var database = { products: []};
+
+for (var i = 1; i<= 300; i++) {
+  database.products.push({
+    id: i,
+    name: faker.commerce.productName(),
+    description: faker.lorem.sentences(),
+    price: faker.commerce.price(),
+    imageUrl: "https://source.unsplash.com/1600x900/?product",
+    quantity: faker.random.number()
+  });
+}
+
+console.log(JSON.stringify(database));
+
+Next, add the  generate  and  server  scripts to the  package.json  file:
+
+"scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "generate": "node ./server/generate.js > ./server/database.json",
+    "server": "json-server --watch ./server/database.json"
+  },
+  
+  
+  Next, head back to your command-line interface and run the generate script using the following command:
+
+$ npm run generate
+
+Finally, run the REST API server by executing the following command:
+
+$ npm run server
+
+Step 8 — Creating a Service for Consuming the REST API with Angular HttpClient
+==================================================================================
+
+We’ll need to create an Angular service for encapsulating the code that allows us to consume data from our REST API server.
+
+Go to your terminal and run the following command:
+
+$ ng g service api
+
+Next, go to the  src/app/api.service.ts  file, import and inject  HttpClient:
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+
+  private SERVER_URL = "http://localhost:3000";
+
+  constructor(private httpClient: HttpClient) { }
+}
+
+
+Next, define a  get()  method that sends a GET request to the REST API endpoint:
+
+import { Injectable } from '@angular/core';  
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({  
+	providedIn: 'root'  
+})  
+export class ApiService {
+
+	private SERVER_URL = "http://localhost:3000";
+	constructor(private httpClient: HttpClient) { }
+
+	public get(){  
+		return this.httpClient.get(this.SERVER_URL);  
+	}  
+}
+
+Next, we now need to use this service in our home component. Open the src/app/home/home.component.ts  file, and import and inject the data service as follows:
+
+import { Component, OnInit } from '@angular/core';  
+import { ApiService } from '../api.service';
+
+@Component({  
+	selector: 'app-home',  
+	templateUrl: './home.component.html',  
+	styleUrls: ['./home.component.css']  
+})  
+export class HomeComponent implements OnInit {
+	products = [];
+	constructor(private apiService: ApiService) { }
+	ngOnInit() {
+		this.apiService.get().subscribe((data: any[])=>{  
+			console.log(data);  
+			this.products = data;  
+		})  
+	}
+}
+
+Next, open the  src/app/home/home.component.html  file and update it as follows:
+
+<div style="padding: 13px;">
+    <mat-spinner *ngIf="products.length === 0"></mat-spinner>
+
+    <mat-card *ngFor="let product of products" style="margin-top:10px;">
+        <mat-card-header>
+            <mat-card-title>{{product.name}}</mat-card-title>
+            <mat-card-subtitle>{{product.price}} $/ {{product.quantity}}
+            </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <p>
+                {{product.description}}
+            </p>
+            <img style="height:100%; width: 100%;" src="{{ product.imageUrl }}" />
+        </mat-card-content>
+        <mat-card-actions>
+      <button mat-button> Buy product</button>
+    </mat-card-actions>
+    </mat-card>
+</div>
+
+Step 9 — Adding Error Handling
+=======================================
+Go to the  src/app/api.service.ts  file and update it as follows:
+
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+
+import {  throwError } from 'rxjs';
+import { retry, catchError } from 'rxjs/operators';
+
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+
+  private SERVER_URL = "http://localhost:3000/products";
+
+  constructor(private httpClient: HttpClient) { }
+
+  handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Unknown error!';
+    if (error.error instanceof ErrorEvent) {
+      // Client-side errors
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side errors
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    }
+    window.alert(errorMessage);
+    return throwError(errorMessage);
+  }
+
+  public sendGetRequest(){
+    return this.httpClient.get(this.SERVER_URL).pipe(catchError(this.handleError));
+  }
+}
+
+

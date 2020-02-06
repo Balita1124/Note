@@ -1,0 +1,11 @@
+1 - Create a maven project
+
+mvn archetype:generate -DgroupId=com.balita.webscrap -DartifactId=web-scrap -DarchetypeArtifactId=Maven-archetype-quickstart -DinteractiveMode=false
+
+2 - Ajouter la dependence
+
+      <dependency>
+          <groupId>org.jsoup</groupId>
+          <artifactId>jsoup</artifactId>
+          <version>1.11.3</version>
+      </dependency>

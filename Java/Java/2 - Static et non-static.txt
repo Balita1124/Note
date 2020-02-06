@@ -9,6 +9,14 @@ Non-static
 une variable non static est une variable qui appartient a un objet. La variable a sa propre valeur pour chaque objet
 
 
+Methode static ou non static
+===================================
+Une methode static n'est pas associé a un objet
+
+StaticTest s1 = new StaticTest(1);
+int y = StaticTest.getX();
+
+
 Exemple
 =====================
 

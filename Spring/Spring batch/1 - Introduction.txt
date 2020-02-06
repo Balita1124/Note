@@ -1,0 +1,33 @@
+Context
+============================
+Les entreprises ont besoin de traiter une grosse volume de données à travers plusieurs series de transactions
+dans leurs activités de tous les jours.
+
+Ces activités devrait etre automatiser pour traiter efficiement les informations sans aucune intervention humaine.
+
+Batch processing peut executer chaque series d'activités à travers des programmes.
+
+Introduction à l'application Batch:
+=====================================
+Besoin d'accomplier plusieurs operations sur des grosses volumes de données:
+Par exemple: 
+		- Generation of salary slips and tax calculations in a large enterprise
+		- Credit card bill generation by banks
+		- Fresh stock updated by retail stores in their catalog
+
+Les capacités standard d'une application spring batch:
+	- Scalable: capable de traiter des milliards de données sans se crasher
+	- Robust: assez intelligent pour identifier les données invalide et garder traces des erreur afin de reexecuter avec des données valides
+	- Dynamic: capable d'interagir avec differentes system
+	- Concurent: capable de traiter plusieurs job en parallele avec une ressource partagé
+	- Systematic: Doit suivre la sequence des processus indiqués
+	- high performance
+	
+Spring batch peut interagir avec les scheduler mais ne peut pas remplacer un scheduler
+
+les fonctionnalités les plus importantes de spring batch:
+	- Supporte plusieurs type de fichers, en incluant les fixed length, delimited files, XML, et les plusieurs base
+	de données à travers le jdbc
+	- Reesaie automatic apres l'erreur
+	- Job control language to monitor and perform common operations such as job start, stop, suspend, and cancel
+	

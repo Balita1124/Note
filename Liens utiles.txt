@@ -7,3 +7,8 @@ https://blog.pascal-martin.fr/post/integration-continue-jenkins-installation-con
 
 
 https://www.javaguides.net/2018/10/free-open-source-projects-using-spring-boot.html
+
+
+picksum
+--------------------
+https://picsum.photos/images

@@ -1,0 +1,221 @@
+Les fonctionnalités Spring Batch XML
+******************************************
+Namespace
+=============
+Le namespace propose de prefix qui peut etre utiliser pour configurer les details dans le fichier config
+
+Tags
+================
+les tags les plus importants de Spring Batch:
+
+- job: defini un job composé d'un ensemble de steps et de transactions entre les steps
+- step: defini un stage dans le processus d'un job
+- tasklet: implementation du tasklet strategy
+- chunk: declare qu'un step fera un traitement orienté chunk
+- job-repository: configure un job repository
+- flow: defini un flow composé d'ensemble de step et de transactions entre les steps
+
+Configurer des jobs, transactions et repositories
+******************************************************
+Job est l'element primaire(root). Voici le hierarchie
+
+- job
+		- step
+				- Tasklet
+						- Chunk
+- job
+		- step
+				- Tasklet
+						- Chunk
+.....
+
+Chaque job peut contenir plusieurs steps
+Chaque Step peut contenir plusieurs tasklets
+Chaque Tasklet peut contenir plusieurs chunk
+
+Chaque composant a un element individuel qui sont definis comme sous-element des autres
+
+<beans xmlns:batch ... >
+	<batch:job id="jobId">
+		<batch:step id="stepId">
+			<batch:tasklet ref="beanReference">
+				<batch:chunk reader="dataReader"
+				processor="dataProcessor"
+				writer="dataWriter" commit-interval="500" />
+			</batch:tasklet>
+		</batch:step>
+		<batch:step>
+		...
+		</batch:step>
+	</batch:job>
+</beans>
+
+Job configuration
+==================================
+
+Voici les attributs de l'element job:
+
+- id: identifiant unique du job
+- abstract: 
+			Sert a dire que le job est abstrait (abstract). ca ne signifie pas qu'il est instancier par lui meme
+			mait plutot pour servir de parent pour la declaration d'un job enfant
+			La valeur par defaut est false
+- increment: C'est une reference pour la definition d'un bean JobParametersIncrementer
+- job-repository: 
+			C'est le nom du bean JobRepository à utiliser
+			Cet attribut n'est pas obligatoire
+			La valeur par defaut est "jobRepository"
+- parent: C'est le nom du bean parent sur laquelle le job devrait heriter
+- restartable: 
+			Ceci defini si le job est restartable en cas de failure
+			La valeur par defaut est true
+			
+Validateur DefaultJobParametersValidator peut etre configuré dans la configuration du job pour vailder un simple et optionnel parametres
+Exemple:
+
+<bean id="validatorId" class="beans.JobParametersValidator">
+	<property name="Keys">
+		<set>
+			<value>keyValues</value>
+		</set>
+	</property>
+</bean>
+
+Step Configuration
+===================================================================
+Step est le premier sous element de job
+Un job peut avoir un ou plusieurs steps
+
+Les differentes approches pour configurer les steps:
+	- Multithreaded step (single process):
+			Spring batch permet de lancer les chunks en parallele dans un seul process.
+			Chaque chunk traite un ensemble de données
+			
+		Exemple: 
+			<step id="loading">
+				<tasklet task-executor="taskExecutor">...</tasklet>
+			</step>
+	- Parallel step (single process): traiter plusieurs steps dans un seul process
+	
+		Exemple:
+			<job id="jobId">
+				<split id="splitId" task-executor="taskExecutor" next="step3">
+					<flow>
+						<step id="step1" next="step2"/>
+						<step id="step2"/>
+					</flow>
+				</split>
+				<step id="step3"/>
+			</job>
+			<beans:bean id="taskExecutor" class="TaskExecutor"/>
+	- Remote chunking of step(multiprocess): 
+			Tranche les precess de steps en plusieurs process, communiquant l'un envers l'autre 
+			à travers un middleware
+			Le step agit comme un maitre et les listeners des middleware agit comme esclave.
+			Alors que le maitre s'execute en un seul process, l'esclave s'execute en multiple process
+		
+	- Partitionning a step (single process or multiprocess): 
+			Partitionnement est le process dans lequel un Step est configuré pour avoir des sous steps
+			le Super step est le maitre, et les substeps esclaves
+			Les esclaves doivent terminé l'execution pour que le maitre soit considerer comme terminé aussi
+
+Les atrributs d'un step sont les suivants:
+
+- id : identifiant unique d'un step
+- next: raccourcis pour specifier le prochain step apres le step courant
+- parent: nom du step parent
+- allow-start-if-complete: mis sur true pour permettre le demarrage a nouveau meme si il est deja terminé
+
+Exemple de configuration d'un step:
+			
+		<step id="firstBatchStepOne">
+			<tasklet ref="firstBatch"/>
+		</step>
+		<job id="firstBatchJob">
+			<step id="stepOne" parent="firstBatchStepOne"/>
+		</job>
+		<bean id="firstBatch" class="FirstBatch"/>			
+
+Tasklet Configuration
+==============================
+Tasklet est un sous element de step, qui peut etre utiliser pour specifier le process de step que est repetitif et transactionnel
+
+els atrributs de tasklet sont:
+- ref : reference de la definition du bean qui implemente le tasklet
+- allow-start-if-complete: Ceci est mis sur true pour permettre au step de se lancer à nouveau meme s'il est deja terminé
+- method: specification du methode responsable de l'execution du tasklet
+- start-limit: nombre maximum de fois ou le step peut etre lancer
+- task-executor; responsable de l'execution de la tache
+- throttle-limit: 
+			Nombre maximum de fois ou la tache peut etre enfilé
+			La valeur par defaut est 4
+- transaction-manager: 
+			nom du bean du transaction manager a utiliser
+			la valeur par defaut est transactionManager s'il n'est pas specifié
+
+Exemple de configuration d'un tasklet:
+
+		<step id="firstBatchStepOne">
+		<tasklet ref="firstBatch" start-limit="6"
+			...
+		</tasklet>
+		</step>
+		<job id="firstBatchJob">
+			<step id="stepOne" parent="firstBatchStep
+		</job>
+		<bean id="firstBatch" class="FirstBatch"/>
+
+Chunk configuration
+=========================
+Chunk est l'element fils d'un tasklet qui peut etre utilisé our faire un read-write processing
+la configuration du chunk necessite plus de beans comparé aux autres elements de configuration
+
+les attributs de l'element chunk sont:
+
+- reader: nom du bean du reader qui sera utiliser par le process et implemente l'interface ItemReader
+- processor: nom du bean de l'item processor qui implemente ItemProcessor
+- writer: nom du bean de l'item writer qui implemente ItemWriter
+- cache-capacity: capacité du cache dans la politique de la relance
+- chunk-completion-policy: un transaction sera commité quand ceci decide de terminé. la taille est egale à la valeur de commit-interval attribute
+- commit-interval: nombre d'item à traiter avant de committer.
+- processor-transactional: ceci determin si le processor est un transaction conscient ou non
+- reader-transactional-queue: 
+- retry-limit: C'est le nombre maximum de fois ou le traitement d'un element sera relancer
+- retry-policy: 
+- skip-limit: nb max de skip d'element autorisé
+- skip-policy:
+
+Exemple de configuration d'un tasklet
+
+		<step id="firstBatchStepOne">
+			<tasklet ref="firstBatch">
+				<chunk reader="itemReader" processor="itemProcessor"
+					writer="itermWriter" commit-interval="150"/>
+			</tasklet>
+		</step>
+		<job id="firstBatchJob">
+			<step id="stepOne" parent="firstBatchStepOne"/>
+		</job>
+		<bean id="firstBatch" class="FirstBatch"/>
+		<bean id="itemReader" class="ItemReader"/>
+		<bean id="itemProcessor" class="ItemProcessor"/>
+		<bean id="itemWriter" class="ItemProcessor"/>
+Transaction Configuration
+=================================================
+Spring nous permet de configurer l'element transaction-attributes comme un element enfant de chunk
+Les exceptions pour laquelle l'operation rollback sera effectué peut etre choisi
+
+Exemple de configuration de transaction:
+
+		<step id="firstBatchStepOne">
+			<tasklet ref="firstBatch" transaction-manager="transactionManager">
+			</tasklet>
+		</step>
+		<job id="firstBatchJob">
+			<step id="stepOne" parent="firstBatchStepOne"/>
+		</job>
+		<bean id="firstBatch" class="FirstBatch"/>
+		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+			<property name="dataSource" ref="DataSource"/>
+		</bean>
+

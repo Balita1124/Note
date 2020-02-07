@@ -50,4 +50,258 @@ Les composants spring batch:
 
 - JobLauncher: interface responsable du lancement d'un job. Quand le job est lancé, JL verifie le JobRepository
 - Job: le batch a executer. il peut etre  configurer dans un xml ou en code java
-- 
+- JobInstance: Instance du job par cycle. Si l'execution jobinstance fails, le meme jobinstance peut etre executer a nouveau
+- JObExecution: represente le single run d'un job. il contient les informations d'execution comme le status, startTime,  endTime, failureException
+- JopParameters: liste des parametres utilisé pour le batch job.
+
+- Step: Sequence de phase d'un batch job. Chaque step est constitué de 3 activités: Reading, Processing et Writing. Il sont pris en compte par ItemReader, ItemProcessor, ItemWritter
+- StepExecution: represente le singleRun d'une application
+- JobRepository: propose l'operation CRUD pour le JobLauncher, Job et Step implementations.
+
+- ItemReader: operation de recuperation. Charge un element a la fois
+- ItemProcessor: business processing
+- ItemWriter: operation de sortie
+
+Job Design et Execution
+===============================
+les differentes facons de lancer un Job:
+	- Ligne de commande
+	- Tache planifiés
+	- programme java
+	- application web
+
+Exemple de projet batch en lancant avec program java
+-------------------------------------------------------
+1 - Creer un projet maven
+
+mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.balita -DartifactId=SpringBatch
+
+2 - Configurer le pom.xml en ajoutant les dependances suivantes
+
+	- Spring framework with batch 
+	- log4j for logging
+	- JUnit to test the application
+	- Commons Lang helper utilities for the java.lang API
+	- HyperSQL Database (HSQLDB)
+	
+pom.xml
+--------------
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.balita</groupId>
+    <artifactId>SpringBatch</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>SpringBatch</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <spring.framework.version>3.2.1.RELEASE</spring.framework.version>
+        <spring.batch.version>3.0.2.RELEASE</spring.batch.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.batch</groupId>
+            <artifactId>spring-batch-core</artifactId>
+            <version>${spring.batch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.batch</groupId>
+            <artifactId>spring-batch-infrastructure</artifactId>
+            <version>${spring.batch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.framework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>1.8.0.7</version>
+        </dependency>
+    </dependencies>
+</project>
+
+3 - Configurer log4j en creant le fichier src/main/resources/log4j.xml
+
+log4j.xml
+-------------
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="CONSOLE"
+              class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out"/>
+        <param name="Threshold" value="INFO" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %c -%m%n"/>
+        </layout>
+    </appender>
+    <logger name="org.springframework" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <root>
+        <level value="DEBUG"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</log4j:configuration>
+
+4 - Mise en place du ficheir de cofiguration src/main/resources/context.xml
+
+context.xml
+-------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/batch"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+http://www.springframework.org/schema/batch
+http://www.springframework.org/schema/batch/spring-batch-3.0.xsd">
+    <!--Job Repository-->
+    <beans:bean id="jobRepository"
+                class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
+        <beans:property name="transactionManager" ref="transactionManager"/>
+    </beans:bean>
+
+    <!--Job Launcher-->
+    <beans:bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <beans:property name="jobRepository" ref="jobRepository"/>
+    </beans:bean>
+
+    <!--Transaction Manager-->
+    <beans:bean id="transactionManager"
+                class="org.springframework.batch.support.transaction.ResourcelessTransactionManager"/>
+
+</beans:beans>
+
+5 - configuration du job dans simpleBatch.xml
+
+simpleBatch.xml
+---------------------
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/batch"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                                http://www.springframework.org/schema/batch
+                                http://www.springframework.org/schema/batch/spring-batch-3.0.xsd">
+
+    <beans:import resource="context.xml"/>
+
+    <beans:bean id="simpleBatch" class="com.balita.SimpleBatch"/>
+    <!--Step declaration-->
+    <step id="simpleBatchStepOne">
+        <tasklet ref="simpleBatch"/>
+    </step>
+
+    <!--Job Declaration-->
+    <job id="simpleBatchJob">
+        <step id="stepOne" parent="simpleBatchStepOne"/>
+    </job>
+</beans:beans>
+
+
+6 - Creation du tasklet SimpleBatch
+
+SimpleBatch.java
+--------------------------
+
+package com.balita;
+
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+
+import java.util.logging.Logger;
+
+public class SimpleBatch implements Tasklet {
+
+    static Logger logger = Logger.getLogger("SimpleBatch");
+
+    public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext)
+            throws Exception {
+        logger.info("*** This is a simple batch ***");
+        return RepeatStatus.FINISHED;
+    }
+}
+
+7 - Creation du programme java pour Lancer le batch job
+
+package com.balita;
+
+import org.apache.log4j.Logger;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+/**
+ * Hello world!
+ */
+public class App {
+
+    private static Logger logger = Logger.getLogger(App.class);
+
+    public static void main(String[] args) {
+
+        String[] springConfig = {"batch/simpleBatch.xml"};
+        ApplicationContext context = new ClassPathXmlApplicationContext(springConfig);
+
+        JobLauncher jobLauncher = (JobLauncher) context.getBean("jobLauncher");
+        Job job = (Job) context.getBean("simpleBatchJob");
+        JobParameters jobParameters = new JobParameters();
+
+        try {
+            JobExecution jobExecution = jobLauncher.run(job, jobParameters);
+            logger.info("Exit Status: " + jobExecution.getStatus());
+        } catch (JobExecutionAlreadyRunningException e) {
+            e.printStackTrace();
+        } catch (JobRestartException e) {
+            e.printStackTrace();
+        } catch (JobInstanceAlreadyCompleteException e) {
+            e.printStackTrace();
+        } catch (JobParametersInvalidException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+
+

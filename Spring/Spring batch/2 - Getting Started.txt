@@ -218,4 +218,115 @@ Exemple de configuration de transaction:
 		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 			<property name="dataSource" ref="DataSource"/>
 		</bean>
+Job repository configuration 
+=============================
+Le JobRepository garde l'information concernant l'execution d'un job
+il garde aussi l'etat 'd'un batch job.
+Disponible en deux type :
+	- in-memory repository: 
+				laisse le job a s'executer a nouveau pour le meme job configuration.
+				Volatile
+				
+				Exemple:
+					
+					<bean id="jobRepository" class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
+						<property name="transactionManager-ref"	ref="transactionManager"/>
+					</bean>
+					<bean id="transactionManager" class="org.springframework.batch.support.transaction.ResourcelessTransactionManager"/>
+					<job id="deductionsJob" job-repository="jobRepository">
+						...
+					</job>
+	- Persistent repository: 
+				Peut etre configurer avec job-repository pour persister dans une base de données
+				Le datasource peut etre configurer en utilisant des api
+				
+				Exemple:
+					<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+						<property name="driverClassName" value="${batch.jdbc.driver}" />
+						<property name="url" value="${batch.jdbc.url}" />
+						<property name="username" value="${batch.jdbc.user}" />
+						<property name="password" value="${batch.jdbc.password}" />
+					</bean>
+					<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager" lazy-init="true">
+						<property name="dataSource" ref="dataSource" />
+					</bean>
+					<job-repository id="jobRepository" data-source="dataSource" transaction-manager="transactionManager"/>					
 
+EL et Listeners
+********************************
+Permet un configuration XML dynamique
+
+Exemple:
+
+<bean id="processBean" class="JobProcessBean" scope="step">
+	<property name="name" value="#{jobParameters[name]}"/>
+</bean>
+
+Listeners
+=================================
+Type de Listeners:
+
+- JobListeners
+- Step listeners
+- Item listeners
+
+Job Listeners
+-------------------------
+Differentes facons de configurer un job listeners:
+
+- Implementing JobExecutionListener: 
+		Exemple:
+			import org.springframework.batch.core.JobExecution;
+			import org.springframework.batch.core.JobExecutionListener;
+			
+			public class JobStatusListener implements JobExecutionListener {
+			
+				public void beforeJob(JobExecution jobExecution) {
+					System.out.println("Job: " + jobExecution.getJobInstance().getJobName() + " is beginning");
+				}
+				
+				public void afterJob(JobExecution jobExecution) {
+					System.out.println("Job: " + jobExecution.getJobInstance().	getJobName() + " has completed");
+					System.out.println("The Job Execution status is: " +jobExecution.getStatus());
+				} 
+			}
+			
+			<job id="employeeDeductionsJob">
+				<listeners>
+					<listener ref="jobStatusListener"/>
+				</listeners>
+			</job>
+		
+- En utilisant des annotations
+		Exemple:
+			import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.annotation.AfterJob;
+import org.springframework.batch.core.annotation.BeforeJob;
+public class JobStatusListener {
+@BeforeJob
+public void beforeJob(JobExecution jobExecution) {
+System.out.println("Job: " +
+jobExecution.getJobInstance().getJobName() + " is
+beginning");
+}
+@AfterJob
+public void afterJob(JobExecution jobExecution) {
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.core.annotation.AfterJob;
+import org.springframework.batch.core.annotation.BeforeJob;
+public class JobStatusListener {
+@BeforeJob
+public void beforeJob(JobExecution jobExecution) {
+System.out.println("Job: " +
+jobExecution.getJobInstance().getJobName() + " is
+beginning");
+}
+@AfterJob
+public void afterJob(JobExecution jobExecution) {
+System.out.println("Job: " + jobExecution.getJobInstance().
+getJobName() + " has completed");
+System.out.println("The Job Execution status is: " +
+jobExecution.getStatus());
+} }

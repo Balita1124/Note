@@ -1,0 +1,256 @@
+Nous aborderons:
+
+- Lecture des données (Data Reading)
+- Traitement ou Transformation des données(Data Processing)
+- Ecriture des données (Data Writing)
+
+Data Reading
+*********************
+Spring batch propose la configuration pour lire differentes formes de données depuis differentes sources
+	- Fichier plat
+	- XML
+	- Base de données relationnel
+	
+ItemReader
+*********************
+Spring batch propose l'interface ItemReader pour lire une masse de données sous differentes formes:
+	- Flat files: fixed width or delimited files
+	- XML
+	- Database
+
+Definition de ItemReader
+
+public interface ItemReader<T> {
+	T read() throws Exception, UnexpectedInputException, ParseException;
+}
+
+Lire les données depuis des fichiers plats
+==============================================
+Fixed width file
+--------------------
+FlatFileItemReader
+--------------------
+permet de lire les fichier:
+- resource: fichier a lire
+- lineMapper: mapper pour convertir le String à lire par ItemReader en Objet Java
+- linesToSkip: ligne à ignorer au debut du fichier (ex: le header)
+
+LineMapper
+------------------
+Permet de lire chaque ligne de fichier avec le numero de ligne pour chaque iteration
+
+public interface LineMapper<T> {
+	T mapLine(String line, int lineNumber) throws Exception;
+}
+
+LineTokenizer est une interface qui transforme le ligne lit par LineMapper en un ensemble de champs(FieldSet).
+
+public interface LineTokenizer {
+	FieldSet tokenize(String line);
+}
+
+DelimitedLineTokenizer, FixedLengthTokenizer,and PatternMatchingCompositeLineTokenizer sont des implementations de LineTokenizer
+
+FieldSetMapper: inteface qui permet de mapper chaque field depuis le String lit en objet Employee
+
+public interface FieldSetMapper<T> {
+	T mapFieldSet(FieldSet fieldSet);
+}
+
+Exemple d'utilisation
+
+package batch;
+
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.FieldSet;
+
+class EmployeeFieldSetMapper implements FieldSetMapper<Employee> {
+    public Employee mapFieldSet(FieldSet fieldSet) {
+        Employee emp = new Employee();
+        emp.setID(fieldSet.readInt("ID"));
+        emp.setLastName(fieldSet.readString("lastName"));
+        emp.setFirstName(fieldSet.readString("firstName"));
+        emp.setDesignation(fieldSet.readString("designation"));
+        emp.setDepartment(fieldSet.readString("department"));
+        emp.setYearOfJoining(fieldSet.readInt("yearOfJoining"));
+        return emp;
+    }
+}
+Fixed width file
+--------------------
+        // Delimited File Read
+        FlatFileItemReader<Employee> itemReader = new FlatFileItemReader<Employee>();
+        itemReader.setResource(new FileSystemResource("employees.csv"));
+        // DelimitedLineTokenizer defaults to comma as its delimiter
+        DefaultLineMapper<Employee> lineMapper = new DefaultLineMapper<Employee>();
+        DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
+        lineTokenizer.setNames(new String[] { "ID", "lastName", "firstName", "designation", "department", "yearOfJoining" });
+        lineMapper.setLineTokenizer(lineTokenizer);
+        lineMapper.setFieldSetMapper(new EmployeeFieldSetMapper());
+        itemReader.setLineMapper(lineMapper);
+        itemReader.open(new ExecutionContext());
+        employee = itemReader.read();
+        if (employee == null) {
+            return RepeatStatus.FINISHED;
+        }
+        System.out.println(employee.toString());
+Configuration:
+
+    <beans:bean id="employeeFile"
+                class="org.springframework.core.io.FileSystemResource"
+                scope="step">
+        <beans:constructor-arg value="#{jobParameters[employeeFile]}"/>
+    </beans:bean>
+    <beans:bean id="employeeFileReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+        <beans:property name="resource" ref="employeeFile"/>
+        <beans:property name="lineMapper">
+            <beans:bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+                <beans:property name="lineTokenizer">
+                    <beans:bean class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+                        <beans:property name="names"
+                                        value="ID, lastName, firstName,designation, department, yearOfJoining"/>
+                        <beans:property name="delimiter" value=","/>
+                    </beans:bean>
+                </beans:property>
+                <beans:property name="fieldSetMapper">
+                    <beans:bean class="batch.EmployeeFieldSetMapper"/>
+                </beans:property>
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+
+Exception depuis un FlatFile
+-------------------------------
+
+Lire depuis un fichier XML
+================================================
+
+Lire depuis une base de données
+================================================
+Deux type pour lire les données:
+	- Cursor-based item reading: lit chaque intervalle qui a un curseur qui pointe sur l'un apres l'autre
+	- Page-based item reading: lit plusieurs enregistrement ensemble. en les considerant comme une page
+preferable d'utiliser Cursor based parce celui ci lit les données petit a petit
+
+JdbcCursorItemReader
+------------------------
+Lire les données en utilisant la technique cursor-based.
+C'est configuré avec RowMapper pour matcher chaque attribut dans la base de données avec les attributs d'un objet Java
+
+public class EmployeeRowMapper implements RowMapper {
+    public static final String ID_COLUMN = "id";
+    public static final String LAST_NAME_COLUMN = "lastname";
+    public static final String FIRST_NAME_COLUMN = "firstname";
+    public static final String DESIGNATIoN_COLUMN = "designation";
+    public static final String DEPARTMENT_COLUMN = "department";
+    public static final String YEAR_OF_JOINING_COLUMN = "yearOfJoining";
+    public Object mapRow(ResultSet rs, int rowNum) throws SQLException
+    {
+        Employee employee = new Employee();
+        employee.setId(rs.getInt(ID_COLUMN));
+        employee.setLastName(rs.getString(LAST_NAME_COLUMN));
+        employee.setFirstName(rs.getString(FIRST_NAME_COLUMN));
+        employee.setDesignation(rs.getString(DESIGNATION_COLUMN));
+        employee.setDepartment(rs.getString(DEPARTMENT_COLUMN));
+        employee.setYearOfJoining(rs.getString(YEAR_OF_JOINING_COLUMN));
+        return employee;
+    }
+}
+
+Exemple de programme java:
+
+        JdbcCursorItemReader itemReader = new JdbcCursorItemReader();
+        itemReader.setDataSource(dataSource);
+        itemReader.setSql("SELECT ID, LASTNAME, FIRSTNAME,DESIGNATION,DEPARTMENT,YEAROFJOINING from EMPLOYEE");
+        itemReader.setRowMapper(new EmployeeRowMapper());
+        int counter = 0;
+        ExecutionContext executionContext = new ExecutionContext();
+        itemReader.open(executionContext);
+        Object employee = newObject();
+        while(employee != null){
+            employee = itemReader.read();
+            counter++;
+        }
+        itemReader.close(executionContext);
+Configuration:
+
+<bean id="itemReader" class="org.springframework.batch.item.database.JdbcCursorItemReader">
+	<property name="dataSource" ref="dataSource"/>
+	<property name="sql" value=" SELECT ID, LASTNAME, FIRSTNAME,DESIGNATION,DEPARTMENT,YEAROFJOINING from EMPLOYEE "/>
+	<property name="rowMapper">
+		<bean class="batch.EmployeeRowMapper"/>
+	</property>
+</bean>
+
+JdbcCursorItemReader peut etre configurer pour ignorer les warning, taille des données a charger, ligne max, timeout de la requete,
+verification de la position du curseur, ....
+
+JdbcPagingItemReader
+----------------------------
+Lire les données en utilisant la technique paging mode.
+
+Configuration
+
+    <bean id="itemReader" class="org.springframework.batch.item.database.JdbcPagingItemReader">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="queryProvider">
+            <bean class=" org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean">
+                <property name="selectClause" value=" SELECT ID, LASTNAME, FIRSTNAME,DESIGNATION,DEPARTMENT,YEAROFJOINING "/>
+                <property name="fromClause" value="from EMPLOYEE"/>
+                <property name="whereClause" value="where designation=:designation"/>
+                <property name="sortKey" value="id"/>
+            </bean>
+        </property>
+        <property name="parameterValues">
+            <map>
+                <entry key="designation" value="manager"/>
+            </map>
+        </property>
+        <property name="pageSize" value="100"/>
+        <property name="rowMapper" ref="employeeMapper"/>
+    </bean>
+	
+Data Processing
+*********************
+Transformation des données.
+ItemProcessor est l'interface responsable
+
+
+ItemProcessor
+*********************
+Sprign batch propose un simple inteface ItemProcessor pour prendre l'Objet, le traiter, et le transformer en une forme souhaitée et la retourné
+comme un autre objet
+
+public interface ItemProcessor<I, O> {
+	O process(I item) throws Exception;
+}
+
+ValidatingItemProcessor: 
+		- implementation de ItemProcessor qui permet de valider les données en entrée avant de le traiter.
+		- si validation fails renvoi: org.springframework.batch.item.validator.ValidationException
+
+Exemple:
+
+public class Employee {
+}
+
+public class Associate {
+    public Associate(Employee employee) {
+    }
+}
+
+public class EmployeeProcessor implements ItemProcessor<Employee, Associate> {
+    public Associate process(Employee employee) throws Exception {
+        return new Associate(employee);
+    }
+}
+
+Configuration
+
+    <job id="jobId">
+        <step name="stepName">
+            <tasklet>
+                <chunk reader="itemReaderName" processor="itemProcessorName" writer="itemWriterName" commit-interval="2"/>
+            </tasklet>
+        </step>
+    </job>

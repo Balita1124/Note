@@ -300,33 +300,130 @@ Differentes facons de configurer un job listeners:
 - En utilisant des annotations
 		Exemple:
 			import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.annotation.AfterJob;
-import org.springframework.batch.core.annotation.BeforeJob;
-public class JobStatusListener {
-@BeforeJob
-public void beforeJob(JobExecution jobExecution) {
-System.out.println("Job: " +
-jobExecution.getJobInstance().getJobName() + " is
-beginning");
+			import org.springframework.batch.core.JobExecutionListener;
+			import org.springframework.batch.core.annotation.AfterJob;
+			import org.springframework.batch.core.annotation.BeforeJob;
+			public class JobStatusListener {
+				@BeforeJob
+				public void beforeJob(JobExecution jobExecution) {
+					System.out.println("Job: " + jobExecution.getJobInstance().getJobName() + " is	beginning");
+				}
+				@AfterJob
+				public void afterJob(JobExecution jobExecution) {
+					System.out.println("Job: " + jobExecution.getJobInstance().	getJobName() + " has completed");
+					System.out.println("The Job Execution status is: " + jobExecution.getStatus());
+				} 
+			}
+Step Listeners
+-------------------------
+le step listener doit etre configurer en tant que job element enfant de step
+
+Liste des step listeners avec les methodes a surcharger:
+- StepExecutionListener: identifie les evenements d'execution avant et apres le step avec beforeStep et afterStep
+- Chunklistener: beforeChunk, afterChunk
+- ItemReadListener: afterRead,onReadError, beforeRead
+- ItemProcessListener: beforeProcess, afterProcess, onProcessError
+- ItemWriteListener: beforeWrite, afterWrite, onWriteError
+- SkipListener: Identifie les skip event d'un read, processing ou writing en utilisant onSkipInRead, onSkipInProcess, onSkipInWriter
+
+ItemListener
+-----------------------------------------------
+identifier les evenements repetition ou de reessai
+
+les item listeners avec les methodes a surcharger
+
+- RepeatListener: identifie l'avant et apres des evenements de repetion en utilisant before et after. onError, open, close
+- RetryListener: Identifier le first et le last essai des evenements. onError
+
+Executer le job depuis la ligne de commande ou une application web
+*******************************************************************
+JobLauncher
+===============
+JobLauncher est un simple interface pour lancer un job avec un ensemble de job parametrs données
+
+Exemple de syntaxe pour configurer le SimpleJobLauncher  avec TaskExecutor pour rendre le process asynchrone
+
+<bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+	<property name="jobRepository" ref="jobRepository"/>
+	<property name="taskExecutor">
+		<bean class="org.springframework.core.task.SimpleAsyncTaskExecutor"/>
+	</property>
+</bean>
+
+Lancer un job depuis une ligne de commande
+===========================================
+les etapes dans lequel CommandLineJobRunner s'exerce:
+- Charger le ApplicationContext approprié
+- Parser les arguments de la ligne de commande pour creer un JobParameters
+- Cibler le job a lancer en se basant sur la ligne de commande
+- Utiliser le JobLauncher proposé dans l'application context pour lancer le job
+
+Exemple de ligne de commmande:
+
+$ java -classpath "/lib/*" org.springframework.batch.core.launch.support.CommandLineJobRunner firstBatch.xml firstBatchJob schedule.date(date)=2007/05/05
+
+le exit code du job execution representes le status du batch job apres l'execution: 
+		- 0 : COMPLETED
+		- 1 : FAILED
+		- 2 : Erreur depuis l'execution dans la ligne de commmande
+
+Lancer un job depuis une application web
+====================================================
+Utilité: Generer un Report depuis un application web
+
+Exemple de programme pour lancer le job utilisant Spring MVC:
+@Controller
+public class JobLauncherController {
+	
+	@Autowired
+	JobLauncher jobLauncher;
+	
+	@Autowired
+	Job job;
+	
+	@RequestMapping("/jobLauncher.html")
+	public void handle() throws Exception {
+		jobLauncher.run(job, new JobParameters());
+	} 
+}		
+Stopper un Job proprement
+====================================================
+JobOperator est l'interface responsable
+il propose des operations CRUD sur le job
+
+Exemple de syntax pour stoper le job:
+
+Set<Long> executions = jobOperator.getRunningExecutions("jobName");
+If( executions.iterator().hasNext()) {
+	jobOperator.stop(executions.iterator().next());
 }
-@AfterJob
-public void afterJob(JobExecution jobExecution) {
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.annotation.AfterJob;
-import org.springframework.batch.core.annotation.BeforeJob;
-public class JobStatusListener {
-@BeforeJob
-public void beforeJob(JobExecution jobExecution) {
-System.out.println("Job: " +
-jobExecution.getJobInstance().getJobName() + " is
-beginning");
-}
-@AfterJob
-public void afterJob(JobExecution jobExecution) {
-System.out.println("Job: " + jobExecution.getJobInstance().
-getJobName() + " has completed");
-System.out.println("The Job Execution status is: " +
-jobExecution.getStatus());
-} }
+
+JobOperator identifie le job en cours avec le nom du job donnée et appele la methode stop
+JObOperator doit etre configurer avant d'etre utilisé
+
+Exemple de configuration
+
+<bean id="jobOperator" class="org.springframework.batch.core.launch.support. SimpleJobOperator">
+	<property name="jobExplorer">
+		<bean class=" org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
+			<property name="dataSource" ref="dataSource"/>
+		</bean>
+	</property>
+	<property name="jobRepository" ref="jobRepository"/>
+	<property name="jobRegistry" ref="jobRegistry"/>
+	<property name="jobLauncher" ref="jobLauncher"/>
+</bean>
+
+la configuration du job supporte le stop setup dans un tasklet et dans un chunk-oriented step
+
+Schedulers
+****************************************
+Spring batch n'est pas un scheduler mais peut interragir avec.
+
+Les plus celebres schedulers:
+
+- Cron : expression based job scheduler disponible sur Unix
+- Control-M: batch scheduling software disponible sur Windows, Unix, Llinux, OpenVMS
+- Spring scheduler: scheduler de spring. qui supporte le XML ou l'annotation-based ou cron expression pour lancer un job
+- Quartz: Riche en fonctionnalité. opensource. peut etre integré sur n'importe quel application java
+

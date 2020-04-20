@@ -1,0 +1,7 @@
+dropdb -p 5432 -h localhost -i -e ANJACDB
+
+psql -U postgres postgres
+
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'ANJACDB';
+
+DROP DATABASE "ANJACDB";

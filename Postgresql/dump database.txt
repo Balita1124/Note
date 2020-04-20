@@ -1,0 +1,7 @@
+Avec pg_restore
+------------------------------
+pg_restore -U BORA -d ANJACDB -1 < C:\Work\ANJACDB\20200224_qualif_exp_blob_ANJACDB_tk98520.dump
+
+avec psql
+---------------------------------------
+psql BOUYGUESTELECOMDB < C:\Work\BORADB\20200110_qualif_exp_BOUYGUESTELECOMDB.dump BOUYGUESTELECOMDB

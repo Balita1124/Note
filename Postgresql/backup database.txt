@@ -1,0 +1,5 @@
+pg_dump -h 198.51.100.0 -p 5432 dbname > dbname.bak
+
+restore
+---------------
+psql test < dbname.bak

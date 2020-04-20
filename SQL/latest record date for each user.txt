@@ -1,0 +1,7 @@
+select t.username, t.date, t.value
+from MyTable t
+inner join (
+    select username, max(date) as MaxDate
+    from MyTable
+    group by username
+) tm on t.username = tm.username and t.date = tm.MaxDate

@@ -1,6 +1,6 @@
 ﻿Créer un projet maven
 ======================================
-mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.balita -DartifactId=interview
+mvn -B archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.dso.bora.migration -DartifactId=bora-migration
 
 Compiler un projet maven
 ========================================

@@ -217,7 +217,7 @@ ItemProcessor est l'interface responsable
 
 
 ItemProcessor
-*********************
+=================================
 Sprign batch propose un simple inteface ItemProcessor pour prendre l'Objet, le traiter, et le transformer en une forme souhaitée et la retourné
 comme un autre objet
 
@@ -254,3 +254,70 @@ Configuration
             </tasklet>
         </step>
     </job>
+	
+Enchainer les traitements
+=================================
+
+    <job id="jobId">
+        <step name="stepName">
+            <tasklet>
+                <chunk reader="itemReaderName" 
+						processor="compositeItemProcessorName"
+						writer="itemWriterName"
+						commit-interval="2"/>
+            </tasklet>
+        </step>
+    </job>
+    <bean id="compositeItemProcessorName"
+          class="org.springframework.batch.item.support.CompositeItemProcessor">
+        <property name="delegates">
+            <list>
+                <bean class="batch.EmployeeProcessor"/>
+                <bean class="batch.AssociateProcessor"/>
+            </list>
+        </property>
+    </bean>
+	
+Data Writing
+*********************
+Spring batch propose un witer pour ecrire les données
+ItemWriter
+======================
+Spring batch propose une interface ItemWriter pour ecrire les masses de données
+
+public interface ItemWriter<T> {
+	void write(List<? extends T> items) throws Exception;
+}
+Database item writers
+======================
+Deux types d'acces:
+- ORM
+- JDBC
+
+JDBC-based database writing
+-----------------------------
+JdbcBatchItemWriter est une implementation de ItemWriter
+
+Exemple:
+
+    <bean id="employeeWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+        <property name="assertUpdates" value="true" />
+        <property name="itemPreparedStatementSetter">
+            <bean class="batch.EmployeePreparedStatementSetter" />
+        </property>
+        <property name="sql" value="INSERT INTO EMPLOYEE (ID, LASTNAME, FIRSTNAME, DESIGNATION, DEPARTMENT, YEAROFJOINING) VALUES(?, ?, ?, ?, ?, ?)" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+	
+	
+public class EmployeePreparedStatementSetter  implements ItemPreparedStatementSetter<Employee> {
+    @Override
+    public void setValues(Employee item, PreparedStatement ps) throws SQLException {
+        ps.setInt(1, item.getId());
+        ps.setString(2, item.getLastName());
+        ps.setString(3, item.getFirstName());
+        ps.setString(4, item.getDesignation());
+        ps.setString(5, item.getDepartment());
+        ps.setInt(6, item.getYearOfJoining());
+    }
+}

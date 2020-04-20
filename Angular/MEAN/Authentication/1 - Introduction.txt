@@ -1,0 +1,18 @@
+Pour s'authentifier
+=========================================
+
+- Laisser l'utilisateur s'inscrire
+- Enregistrer leur données, Ne jamais enregistrer automatiquement le mot de passe
+- Laisser l'utilisateur se connecter
+- Parametrer les droits d'access
+- Changer l'ecran selon le status de l'user (connecté ou pas)
+
+Flux de l'authentification
+================================================
+
+- L'user est stocker dans la db Mongodb, avec le mot de passe crypté
+- Des fonctions crud seront mise en place avec Express API - Create (s'inscrire), Read (Se connecter), Update et Delete
+- Express API genere un Json Web Token sur l'inscription et l'authentification, puis le passe vers l'application Angular
+- l'application Angular stocke le JWT afin de maintenir la session de l'utilisateur
+- l'application Angular vérifie la validité du JWT lors de l'affichage des vues protégées
+- l'application Angular renvoie le JWT à Express lors de l'appel des routes d'API protégées.

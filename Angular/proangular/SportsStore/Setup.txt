@@ -1,0 +1,1829 @@
+Preparing project
+==========================================
+$ ng new SportsStore
+
+Installing the Additional NPM Packages
+------------------------------------------
+cd SportsStore
+#npm install jquery
+#npm install popper.js
+npm install bootstrap@4.1.1
+npm install font-awesome@4.7.0
+npm install --save-dev json-server@0.12.1
+npm install --save-dev jsonwebtoken@8.1.1
+
+Adding the CSS Style Sheets to the Application
+------------------------------------------------
+angular.json
+************
+"architect": {
+	"build": {
+		"builder": "@angular-devkit/build-angular:browser",
+		"options": {
+			"outputPath": "dist/SportsStore",
+			"index": "src/index.html",
+			"main": "src/main.ts",
+			"polyfills": "src/polyfills.ts",
+			"tsConfig": "src/tsconfig.app.json",
+			"assets": [
+				"src/favicon.ico",
+				"src/assets"
+			],
+			"styles": [
+				"src/styles.css",
+				"node_modules/bootstrap/dist/css/bootstrap.min.css",
+				"node_modules/font-awesome/css/font-awesome.min.css"
+			],
+			"scripts": []
+		},
+		
+Preparing the RESTful Web Service
+----------------------------------
+package.json
+*************
+..
+"scripts": {
+	"ng": "ng",
+	"start": "ng serve",
+	"build": "ng build",
+	"test": "ng test",
+	"lint": "ng lint",
+	"e2e": "ng e2e",
+	"json": "json-server data.js -p 3500 -m authMiddleware.js"
+},
+...
+
+SportsStore/data.js
+***********************
+module.exports = function () {
+    return { 
+        products: [
+            { id: 1, name: "Kayak", category: "Watersports", 
+                description: "A boat for one person", price: 275 },
+            { id: 2, name: "Lifejacket", category: "Watersports", 
+                description: "Protective and fashionable", price: 48.95 },
+            { id: 3, name: "Soccer Ball", category: "Soccer", 
+                description: "FIFA-approved size and weight", price: 19.50 },
+            { id: 4, name: "Corner Flags", category: "Soccer", 
+                description: "Give your playing field a professional touch", 
+                price: 34.95 },
+            { id: 5, name: "Stadium", category: "Soccer", 
+                description: "Flat-packed 35,000-seat stadium", price: 79500 },
+            { id: 6, name: "Thinking Cap", category: "Chess", 
+                description: "Improve brain efficiency by 75%", price: 16 },
+            { id: 7, name: "Unsteady Chair", category: "Chess", 
+                description: "Secretly give your opponent a disadvantage", 
+                price: 29.95 },
+            { id: 8, name: "Human Chess Board", category: "Chess", 
+                description: "A fun game for the family", price: 75 },
+            { id: 9, name: "Bling Bling King", category: "Chess", 
+                description: "Gold-plated, diamond-studded King", price: 1200 }
+        ],
+        orders: []
+    }
+}
+
+SportsStore/authMiddleware.js
+***************************************
+ const jwt = require("jsonwebtoken");
+const APP_SECRET = "myappsecret";
+const USERNAME = "admin";
+const PASSWORD = "secret";
+module.exports = function (req, res, next) {
+	if ((req.url == "/api/login" || req.url == "/login") && req.method == "POST") {
+		if (req.body != null && req.body.name == USERNAME	&& req.body.password == PASSWORD) {
+			let token = jwt.sign({ data: USERNAME, expiresIn: "1h" }, APP_SECRET);
+			res.json({ success: true, token: token });
+		} else {
+			res.json({ success: false });
+		}
+		res.end();
+		return;
+	} else if ((((req.url.startsWith("/api/products") || req.url.startsWith("/products")) || (req.url.startsWith("/api/categories") || req.url.startsWith("/categories"))) && req.method != "GET")
+	|| ((req.url.startsWith("/api/orders") || req.url.startsWith("/orders")) && req.method != "POST")) {
+		let token = req.headers["authorization"];
+		if (token != null && token.startsWith("Bearer<")) {
+			token = token.substring(7, token.length - 1);
+			try {
+				jwt.verify(token, APP_SECRET);
+				next();
+				return;
+			} catch (err) { }
+		}
+		res.statusCode = 401;
+		res.end();
+		return;
+	}
+	next();
+}
+
+Preparing the HTML
+---------------------------------------------
+src/index.html
+*****************************
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>SportsStore</title>
+	<base href="/">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body class="m-2">
+	<app>SportsStore Will Go Here</app>
+</body>
+</html>
+
+Creating the folder structure
+---------------------------------
+- SportsStore/src/app/model : This folder will contain the code for the data model
+- SportsStore/src/app/store : This folder will contain the functionality for basic shopping.
+- SportsStore/src/app/admin : This folder will contain the functionality for administration
+
+Running the application
+--------------------------------
+ng serve --port 3000 --open
+
+Starting the RESTful Web Service
+-------------------------------------------
+npm run json
+
+For testing: request the url http://localhost:3500/products/1
+the result will be:
+
+{
+	"id": 1,
+	"name": "Kayak",
+	"category": "Watersports",
+	"description": "A boat for one person",
+	"price": 275
+}
+
+Preparing the Angular Project Features
+============================================
+Application => One root() => Many componnents
+
+Updating the root component
+----------------------------
+src/app/app.component.ts
+***************************
+
+import { Component } from "@angular/core";
+
+@Component({
+	selector: "app",
+	template: 	`<div class="bg-success p-2 text-center text-white">
+					This is SportsStore
+				</div>`
+})
+export class AppComponent { }
+
+@Component: tels that the class is a Component and its properties configure how the component is applied (IOC).
+
+Updating the Root Module
+----------------------------
+2 types of angular modules: 
+	- feature module : used to group related application functionality to make the application easier to manage
+	- root module : used to describe the application to angular. the description includes which feature modules are required to run the application,
+					which custom features should be loaded, and the name of the root component
+					
+src/app/app.module.ts
+****************************
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { AppComponent } from './app.component';
+@NgModule({
+	declarations: [AppComponent],
+	imports: [BrowserModule],
+	providers: [],
+	bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Inspecting the Bootstrap File
+---------------------------------
+
+Starting the Data Model
+================================
+Creating the Model Classes
+-----------------------------
+create SportsStore/src/app/model/product.model.ts
+*************************************************
+export class Product {
+	constructor(
+		public id?: number,
+		public name?: string,
+		public category?: string,
+		public description?: string,
+		public price?: number) { }
+}
+
+? : means the parameters is optional
+
+Creating the Dummy Data Source
+----------------------------------
+SportsStore/src/app/model/static.datasource.ts
+***********************************************
+
+import { Injectable } from "@angular/core";
+import { Product } from "./product.model";
+import { Observable, from } from "rxjs";
+@Injectable()
+export class StaticDataSource {
+	private products: Product[] = [
+		new Product(1, "Product 1", "Category 1", "Product 1 (Category 1)", 100),
+		new Product(2, "Product 2", "Category 1", "Product 2 (Category 1)", 100),
+		new Product(3, "Product 3", "Category 1", "Product 3 (Category 1)", 100),
+		new Product(4, "Product 4", "Category 1", "Product 4 (Category 1)", 100),
+		new Product(5, "Product 5", "Category 1", "Product 5 (Category 1)", 100),
+		new Product(6, "Product 6", "Category 2", "Product 6 (Category 2)", 100),
+		new Product(7, "Product 7", "Category 2", "Product 7 (Category 2)", 100),
+		new Product(8, "Product 8", "Category 2", "Product 8 (Category 2)", 100),
+		new Product(9, "Product 9", "Category 2", "Product 9 (Category 2)", 100),
+		new Product(10, "Product 10", "Category 2", "Product 10 (Category 2)", 100),
+		new Product(11, "Product 11", "Category 3", "Product 11 (Category 3)", 100),
+		new Product(12, "Product 12", "Category 3", "Product 12 (Category 3)", 100),
+		new Product(13, "Product 13", "Category 3", "Product 13 (Category 3)", 100),
+		new Product(14, "Product 14", "Category 3", "Product 14 (Category 3)", 100),
+		new Product(15, "Product 15", "Category 3", "Product 15 (Category 3)", 100),
+	];
+	getProducts(): Observable<Product[]> {
+		return from([this.products]);
+	}
+}
+
+Observable: class provided by the Reactive Extensions package, which is used by Angular to handle state changes in applications.
+@Injectable : used to tell angular that this class will used as service.
+
+Creating the Model Repository
+--------------------------------------
+Responsible for distributing the data
+
+SportsStore/src/app/model/product.repository.ts
+**********************************************
+import { Injectable } from "@angular/core";
+import { Product } from "./product.model";
+import { StaticDataSource } from "./static.datasource";
+@Injectable()
+export class ProductRepository {
+	private products: Product[] = [];
+	private categories: string[] = [];
+	
+	constructor(private dataSource: StaticDataSource) {
+		dataSource.getProducts().subscribe(data => {
+			this.products = data;
+			this.categories = data.map(p => p.category).filter((c, index, array) => array.indexOf(c) == index).sort();
+		});
+	}
+	
+	getProducts(category: string = null): Product[] {
+		return this.products.filter(p => category == null || category == p.category);
+	}
+	
+	getProduct(id: number): Product {
+		return this.products.find(p => p.id == id);
+	}
+	
+	getCategories(): string[] {
+		return this.categories;
+	}
+}
+Creating the Feature Module
+--------------------------------
+SportsStore/src/app/model/model.module.ts
+******************************************
+import { NgModule } from "@angular/core";
+import { ProductRepository } from "./product.repository";
+import { StaticDataSource } from "./static.datasource";
+
+@NgModule({
+	providers: [ProductRepository, StaticDataSource]
+})
+export class ModelModule { }
+
+Starting the Store
+=============================
+Creating the Store Component and Template
+--------------------------------------------
+SportsStore/src/app/store/store.component.ts 
+***********************************************
+
+import { Component } from "@angular/core";
+import { Product } from "../model/product.model";
+import { ProductRepository } from "../model/product.repository";
+
+@Component({
+	selector: "store",
+	templateUrl: "store.component.html"
+})
+export class StoreComponent {
+
+	constructor(private repository: ProductRepository) { }
+	
+	get products(): Product[] {
+		return this.repository.getProducts();
+	}
+	
+	get categories(): string[] {
+		return this.repository.getCategories();
+	}
+}
+
+@Component: Tells angular that it is a component
+
+portsStore/src/app/store/store.component.html
+**************************************************
+<div class="container-fluid">
+	<div class="row">
+		<div class="col bg-dark text-white">
+			<a class="navbar-brand">SPORTS STORE</a>
+		</div>
+	</div>
+	<div class="row text-white">
+		<div class="col-3 bg-info p-2">
+			{{categories.length}} Categories
+		</div>
+		<div class="col-9 bg-success p-2">
+			{{products.length}} Products
+		</div>
+	</div>
+</div>
+
+{{  }} : angular data binding
+
+Creating the Store Feature Module
+------------------------------------------
+SportsStore/src/app/store/store.module.ts
+*************************************************
+import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { FormsModule } from "@angular/forms";
+import { ModelModule } from "../model/model.module";
+import { StoreComponent } from "./store.component";
+@NgModule({
+	imports: [ModelModule, BrowserModule, FormsModule],
+	declarations: [StoreComponent],
+	exports: [StoreComponent]
+})
+export class StoreModule { }
+
+Updating the Root Component and Root Module
+----------------------------------------------------
+SportsStore/src/app/app.component.ts
+*************************************
+
+import { Component } from "@angular/core";
+@Component({
+	selector: "app",
+	template: "<store></store>"
+})
+export class AppComponent { }
+
+
+SportsStore/src/app/app.module.ts
+**************************************
+import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { AppComponent } from "./app.component";
+import { StoreModule } from "./store/store.module";
+
+@NgModule({
+	imports: [BrowserModule, StoreModule],
+	declarations: [AppComponent],
+	bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Adding Store Features the Product Details
+===========================================
+Displaying the Product Details
+--------------------------------
+store.component.html
+**************************
+<div class="container-fluid">
+	<div class="row">
+		<div class="col bg-dark text-white">
+			<a class="navbar-brand">SPORTS STORE</a>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-3 bg-info p-2 text-white">
+			{{categories.length}} Categories
+		</div>
+		<div class="col-9 p-2">
+			<div *ngFor="let product of products" class="card m-1 p-1 bg-light">
+			<h4>
+				{{product.name}}
+				<span class="badge badge-pill badge-primary float-right">
+					{{ product.price | currency:"USD":"symbol":"2.2-2" }}
+				</span>
+			</h4>
+			<div class="card-text bg-white p-1">{{product.description}}</div>
+		</div>
+	</div>
+</div>
+
+Adding Category Selection
+--------------------------
+store.component.ts
+**********************
+import { Component } from "@angular/core";
+import { Product } from "../model/product.model";
+import { ProductRepository } from "../model/product.repository";
+@Component({
+	selector: "store",
+	templateUrl: "store.component.html"
+})
+export class StoreComponent {
+	
+	public selectedCategory = null;
+	
+	constructor(private repository: ProductRepository) {}
+	
+	get products(): Product[] {
+		return this.repository.getProducts(this.selectedCategory);
+	}
+	get categories(): string[] {
+		return this.repository.getCategories();
+	}
+	changeCategory(newCategory?: string) {
+		this.selectedCategory = newCategory;
+	}
+}
+store.component.html
+****************************
+<div class="col-3 p-2">
+	<button class="btn btn-block btn-outline-primary" (click)="changeCategory()">
+		Home
+	</button>
+	<button *ngFor="let cat of categories"
+		class="btn btn-outline-primary btn-block"
+		[class.active]="cat == selectedCategory" (click)="changeCategory(cat)">
+		{{cat}}
+	</button>
+</div>
+
+Adding Product Pagination
+----------------------------
+store.component.ts
+***********************
+import { Component } from "@angular/core";
+import { Product } from "../model/product.model";
+import { ProductRepository } from "../model/product.repository";
+@Component({
+selector: "store",
+templateUrl: "store.component.html"
+})
+export class StoreComponent {
+
+	public selectedCategory = null;
+	public productsPerPage = 4;
+	public selectedPage = 1;
+	
+	constructor(private repository: ProductRepository) {}
+	
+	get products(): Product[] {
+		let pageIndex = (this.selectedPage - 1) * this.productsPerPage
+		return this.repository.getProducts(this.selectedCategory).slice(pageIndex, pageIndex + this.productsPerPage);
+	}
+	get categories(): string[] {
+		return this.repository.getCategories();
+	}
+	changeCategory(newCategory?: string) {
+		this.selectedCategory = newCategory;
+	}
+	changePage(newPage: number) {
+		this.selectedPage = newPage;
+	}
+	changePageSize(newSize: number) {
+		this.productsPerPage = Number(newSize);
+		this.changePage(1);
+	}
+	get pageNumbers(): number[] {
+		return Array(Math.ceil(this.repository.getProducts(this.selectedCategory).length / this.productsPerPage)).fill(0).map((x, i) => i + 1);
+	}
+}
+
+store.component.html
+***********************
+...
+...
+...
+<div class="form-inline float-left mr-1">
+	<select class="form-control" [value]="productsPerPage"	(change)="changePageSize($event.target.value)">
+		<option value="3">3 per Page</option>
+		<option value="4">4 per Page</option>
+		<option value="6">6 per Page</option>
+		<option value="8">8 per Page</option>
+	</select>
+</div>
+<div class="btn-group float-right">
+	<button *ngFor="let page of pageNumbers" (click)="changePage(page)"
+		class="btn btn-outline-primary"
+		[class.active]="page == selectedPage">
+		{{page}}
+	</button>
+</div>
+...
+...
+...
+
+Creating a Custom Directive
+-------------------------------
+src/app/store/counter.directive.ts
+**********************
+import {
+	Directive, ViewContainerRef, TemplateRef, Input, Attribute, SimpleChanges
+} from "@angular/core";
+
+@Directive({
+	selector: "[counterOf]"
+})
+export class CounterDirective {
+
+	constructor(private container: ViewContainerRef,
+	
+	private template: TemplateRef<Object>) {
+	}
+	
+	@Input("counterOf")
+	counter: number;
+	
+	ngOnChanges(changes: SimpleChanges) {
+		this.container.clear();
+		for (let i = 0; i < this.counter; i++) {
+			this.container.createEmbeddedView(this.template, new CounterDirectiveContext(i + 1));
+		}
+	}
+}
+class CounterDirectiveContext {
+	constructor(public $implicit: any) { }
+}
+
+src/app/store/store.module.ts (Registering the custom directive)
+**************************************************
+
+......
+import { CounterDirective } from "./counter.directive";
+.........
+
+@NgModule({
+	...
+	declarations: [StoreComponent, CounterDirective],
+	...
+})
+...
+
+store.component.html
+***************************
+<div class="btn-group float-right">
+	<button *counter="let page of pageCount" (click)="changePage(page)"
+		class="btn btn-outline-primary" [class.active]="page == selectedPage">
+		{{page}}
+	</button>
+</div>
+
+store.component.ts
+************************
+get pageCount(): number {
+	return Math.ceil(this.repository.getProducts(this.selectedCategory).length / this.productsPerPage)
+}
+//get pageNumbers(): number[] {
+// return Array(Math.ceil(this.repository
+// .getProducts(this.selectedCategory).length / this.productsPerPage))
+// .fill(0).map((x, i) => i + 1);
+//}
+
+
+SPORTSSTORE: ORDERS AND CHECKOUT
+==================================
+**************X*******************
+
+Preparing the example application
+====================================
+run backend app:
+
+npm run json
+
+run frontend app
+
+ng serve --port 3000 --open
+
+Creating the cart
+====================================
+Creating the cart model
+---------------------------
+src/app/model/cart.model.ts
+*****************************
+import { Injectable } from "@angular/core";
+import { Product } from "./product.model";
+
+@Injectable()
+export class Cart {
+	
+	public lines: CartLine[] = [];
+	public itemCount: number = 0;
+	public cartPrice: number = 0;
+	
+	addLine(product: Product, quantity: number = 1) {
+		let line = this.lines.find(line => line.product.id == product.id);
+		if (line != undefined) {
+			line.quantity += quantity;
+		} else {
+			this.lines.push(new CartLine(product, quantity));
+		}
+		this.recalculate();
+	}
+	
+	updateQuantity(product: Product, quantity: number) {
+		let line = this.lines.find(line => line.product.id == product.id);
+		if (line != undefined) {
+			line.quantity = Number(quantity);
+		}
+		this.recalculate();
+	}
+	
+	removeLine(id: number) {
+		let index = this.lines.findIndex(line => line.product.id == id);
+		this.lines.splice(index, 1);
+		this.recalculate();
+	}
+	clear() {
+		this.lines = [];
+		this.itemCount = 0;
+		this.cartPrice = 0;
+	}
+	private recalculate() {
+		this.itemCount = 0;
+		this.cartPrice = 0;
+		this.lines.forEach(l => {
+			this.itemCount += l.quantity;
+			this.cartPrice += (l.quantity * l.product.price);
+		})
+	}
+}
+export class CartLine {
+	constructor(public product: Product, public quantity: number) {}
+	get lineTotal() {
+		return this.quantity * this.product.price;
+	}
+}
+
+Make the Cart a service to ensure that the object can be used throughout the entire application. For that
+We have to use the @Injectable
+
+register Cart to Model module
+****************************
+import { NgModule } from "@angular/core";
+.......
+import { Cart } from "./cart.model";
+
+...................
+	providers: [ProductRepository, StaticDataSource, Cart]
+....................
+
+Creating the cart summary components
+---------------------------------------
+src/app/store/cartSummary.component.ts
+**************************************
+
+import { Component } from "@angular/core";
+import { Cart } from "../model/cart.model";
+
+@Component({
+	selector: "cart-summary",
+	templateUrl: "cartSummary.component.html"
+})
+export class CartSummaryComponent {
+	constructor(public cart: Cart) { }
+}
+
+src/app/store/cartSummary.component.html
+************************************************
+<div class="float-right">
+	<small>
+		Your cart:
+		<span *ngIf="cart.itemCount > 0">
+			{{ cart.itemCount }} item(s)
+			{{ cart.cartPrice | currency:"USD":"symbol":"2.2-2" }}
+		</span>
+		<span *ngIf="cart.itemCount == 0">
+			(empty)
+		</span>
+	</small>
+	<button class="btn btn-sm bg-dark text-white" [disabled]="cart.itemCount == 0">
+		<i class="fa fa-shopping-cart"></i>
+	</button>
+</div>
+
+register the cartSummary to Store module
+*****************************************
+...................
+import { CartSummaryComponent } from "./cartSummary.component";
+........................
+
+..................
+ declarations: [StoreComponent, CounterDirective, CartSummaryComponent],
+ ..................
+ 
+ Integrating the cart into the store
+ ---------------------------------------
+ adding cart support to store
+ 
+  src/app/store/store.component.ts
+  **********************************
+  
+  ..............
+  import { Cart } from "../model/cart.model";
+  ........................
+  
+  constructor(private repository: ProductRepository, private cart: Cart) { }
+  
+  ..........................
+  
+  addProductToCart(product: Product) {
+		this.cart.addLine(product);
+  }
+ 
+ store.component.html 
+ ******************************
+<div class="row">
+	<div class="col bg-dark text-white">
+		<a class="navbar-brand">SPORTS STORE</a>
+		<cart-summary></cart-summary>
+	</div>
+</div>
+.....
+.....
+<div class="col-9 p-2">
+	<div *ngFor="let product of products" class="card m-1 p-1 bg-light">
+		<h4>
+			{{product.name}}
+			<span class="badge badge-pill badge-primary float-right">
+			{	{ product.price | currency:"USD":"symbol":"2.2-2" }}
+			</span>
+		</h4>
+		<div class="card-text bg-white p-1">
+		{{product.description}}
+		
+		<button class="btn btn-success btn-sm float-right"
+			(click)="addProductToCart(product)">
+			Add To Cart
+		</button>
+		
+	</div>
+</div>
+
+Adding URL Routing
+==========================
+/store 		This URL will display the list of products.
+/cart 		This URL will display the user’s cart in detail.
+/checkout 	This URL will display the checkout process
+
+Creating the Cart Detail and Checkout Components
+----------------------------------------------------
+src/app/store/cartDetail.component.ts
+*************************************
+import { Component } from "@angular/core";
+
+@Component({
+	template: `<div><h3 class="bg-info p-1 text-white">Cart Detail Component</h3></div>`
+})
+export class CartDetailComponent {}
+
+src/app/store/checkout.component.ts
+***********************************
+import { Component } from "@angular/core";
+
+@Component({
+	template: `<div><h3 class="bg-info p-1 text-white">Checkout Component</h3></div>`
+})
+export class CheckoutComponent { }
+
+Add them to exports properties which means they can be use elsewhere in the application
+
+src/app/store/store.module.ts
+*****************************
+.......
+import { CartDetailComponent } from "./cartDetail.component";
+import { CheckoutComponent } from "./checkout.component";
+.......
+declarations: [StoreComponent, CounterDirective, CartSummaryComponent,
+CartDetailComponent, CheckoutComponent],
+......
+exports: [StoreComponent, CartDetailComponent, CheckoutComponent]
+.....
+
+Creating and Applying the Routing Configuration
+------------------------------------------------
+src/app/app.module.ts 
+************************
+import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { AppComponent } from "./app.component";
+import { StoreModule } from "./store/store.module";
+import { StoreComponent } from "./store/store.component";
+import { CheckoutComponent } from "./store/checkout.component";
+import { CartDetailComponent } from "./store/cartDetail.component";
+import { RouterModule } from "@angular/router";
+@NgModule({
+	imports: [BrowserModule, StoreModule,
+		RouterModule.forRoot([
+		{ path: "store", component: StoreComponent },
+		{ path: "cart", component: CartDetailComponent },
+		{ path: "checkout", component: CheckoutComponent },
+		{ path: "**", redirectTo: "/store" }
+		])],
+	declarations: [AppComponent],
+	bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+RouterModule.forRoot method is passed a set of routes. each of which maps a URL to a component
+
+Defining the routing target in the app.component.ts
+
+ src/app/app.component.ts
+ *****************************
+import { Component } from "@angular/core";
+
+@Component({
+	selector: "app",
+	template: "<router-outlet></router-outlet>"
+})
+export class AppComponent { }
+
+Navigating Through the Application
+----------------------------------------
+Navigating using javascript
+
+app/src/store/store.component.ts
+********************************
+......
+import { Router } from "@angular/router";
+..............
+
+constructor(private repository: ProductRepository, private cart: Cart, private router: Router) { }
+.......
+
+addProductToCart(product: Product) {
+	this.cart.addLine(product);
+	this.router.navigateByUrl("/cart");
+}
+...........
+
+Adding navigation in cardSummary.component.html
+
+src/app/store/cartSummary.component.html
+****************************************
+
+<div class="float-right">
+	<small>
+		Your cart:
+		<span *ngIf="cart.itemCount > 0">
+			{{ cart.itemCount }} item(s)
+			{{ cart.cartPrice | currency:"USD":"symbol":"2.2-2" }}
+		</span>
+		<span *ngIf="cart.itemCount == 0">
+			(empty)
+		</span>
+	</small>
+	<button class="btn btn-sm bg-dark text-white"
+		[disabled]="cart.itemCount == 0" routerLink="/cart">
+		<i class="fa fa-shopping-cart"></i>
+	</button>
+</div>
+
+Add support for RoutingModule
+
+src/app/store/store.module.ts
+**********************************
+.....
+import { RouterModule } from "@angular/router";
+.....
+imports: [ModelModule, BrowserModule, FormsModule, RouterModule],
+.....
+.....
+Guarding the Routes
+-----------------------------
+SportsStore/src/app/storeFirst.guard.ts
+****************************************
+import { Injectable } from "@angular/core";
+import {ActivatedRouteSnapshot, RouterStateSnapshot,Router} from "@angular/router";
+
+import { StoreComponent } from "./store/store.component";
+
+@Injectable()
+export class StoreFirstGuard {
+	private firstNavigation = true;
+	
+	constructor(private router: Router) { }
+	
+	canActivate(route: ActivatedRouteSnapshot,	state: RouterStateSnapshot): boolean {
+		if (this.firstNavigation) {
+			this.firstNavigation = false;
+			if (route.component != StoreComponent) {
+				this.router.navigateByUrl("/");
+				return false;
+			}
+		}
+		return true;
+	}
+}
+src/app/app.module.ts 
+*********************
+.............
+import { StoreFirstGuard } from "./storeFirst.guard";
+.............
+{
+	path: "store", component: StoreComponent,
+	canActivate: [StoreFirstGuard]
+},
+{
+	path: "cart", component: CartDetailComponent,
+	canActivate: [StoreFirstGuard]
+},
+{
+	path: "checkout", component: CheckoutComponent,
+	canActivate: [StoreFirstGuard]
+},
+........
+providers: [StoreFirstGuard],
+
+Completing the Cart Detail Feature
+======================================
+
+src/app/store/cartDetail.component.ts
+**************************************
+.....
+import { Cart } from "../model/cart.model";
+......
+templateUrl: "cartDetail.component.html"
+......
+constructor(public cart: Cart) { }
+..
+
+src/app/store/cartDetail.component.html
+****************************************
+<div class="container-fluid">
+	<div class="row">
+		<div class="col bg-dark text-white">
+			<a class="navbar-brand">SPORTS STORE</a>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col mt-2">
+			<h2 class="text-center">Your Cart</h2>
+			<table class="table table-bordered table-striped p-2">
+			<thead>
+			<tr>
+			<th>Quantity</th>
+			<th>Product</th>
+			<th class="text-right">Price</th>
+			<th class="text-right">Subtotal</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr *ngIf="cart.lines.length == 0">
+			<td colspan="4" class="text-center">
+			Your cart is empty
+			</td>
+			</tr>
+			<tr *ngFor="let line of cart.lines">
+			<td>
+			<input type="number" class="form-control-sm"
+			style="width:5em"
+			[value]="line.quantity"
+			(change)="cart.updateQuantity(line.product,
+			$event.target.value)" />
+			</td>
+			<td>{{line.product.name}}</td>
+			<td class="text-right">
+			{{line.product.price | currency:"USD":true:"2.2-2"}}
+			</td>
+			<td class="text-right">
+			{{(line.lineTotal) | currency:"USD":true:"2.2-2" }}
+			</td>
+			<td class="text-center">
+			<button class="btn btn-sm btn-danger"
+			(click)="cart.removeLine(line.product.id)">
+			Remove
+			</button>
+			</td>
+			</tr>
+			</tbody>
+			<tfoot>
+			<tr>
+			<td colspan="3" class="text-right">Total:</td>
+			<td class="text-right">
+			{{cart.cartPrice | currency:"USD":"symbol":"2.2-2"}}
+			</td>
+			</tr>
+			</tfoot>
+			</table>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col">
+			<div class="text-center">
+				<button class="btn btn-primary m-1" routerLink="/store">
+					Continue Shopping
+				</button>
+				<button class="btn btn-secondary m-1" routerLink="/checkout"
+					[disabled]="cart.lines.length == 0">
+					Checkout
+				</button>
+			</div>
+		</div>
+	</div>
+	
+Processing Orders
+=============================
+Extending the Model
+--------------------------
+src/app/mode/order.model.ts
+*****************************
+import { Injectable } from "@angular/core";
+import { Cart } from "./cart.model";
+
+@Injectable()
+export class Order {
+	
+	public id: number;
+	public name: string;
+	public address: string;
+	public city: string;
+	public state: string;
+	public zip: string;
+	public country: string;
+	public shipped: boolean = false;
+	
+	constructor(public cart: Cart) { }
+	
+	clear() {
+		this.id = null;
+		this.name = this.address = this.city = null;
+		this.state = this.zip = this.country = null;
+		this.shipped = false;
+		this.cart.clear();
+	}
+}
+Updating the Repository and Data Source
+****************************************
+src/app/model/static.datasource.ts 
+***********************************
+import { Injectable } from "@angular/core";
+import { Product } from "./product.model";
+import { Observable, from } from "rxjs";
+import { Order } from "./order.model";
+
+@Injectable()
+export class StaticDataSource {
+	private products: Product[] = [
+		new Product(1, "Product 1", "Category 1", "Product 1 (Category 1)", 100),
+		new Product(2, "Product 2", "Category 1", "Product 2 (Category 1)", 100),
+		new Product(3, "Product 3", "Category 1", "Product 3 (Category 1)", 100),
+		new Product(4, "Product 4", "Category 1", "Product 4 (Category 1)", 100),
+		new Product(5, "Product 5", "Category 1", "Product 5 (Category 1)", 100),
+		new Product(6, "Product 6", "Category 2", "Product 6 (Category 2)", 100),
+		new Product(7, "Product 7", "Category 2", "Product 7 (Category 2)", 100),
+		new Product(8, "Product 8", "Category 2", "Product 8 (Category 2)", 100),
+		new Product(9, "Product 9", "Category 2", "Product 9 (Category 2)", 100),
+		new Product(10, "Product 10", "Category 2", "Product 10 (Category 2)", 100),
+		new Product(11, "Product 11", "Category 3", "Product 11 (Category 3)", 100),
+		new Product(12, "Product 12", "Category 3", "Product 12 (Category 3)", 100),
+		new Product(13, "Product 13", "Category 3", "Product 13 (Category 3)", 100),
+		new Product(14, "Product 14", "Category 3", "Product 14 (Category 3)", 100),
+		new Product(15, "Product 15", "Category 3", "Product 15 (Category 3)", 100),
+	];
+	getProducts(): Observable<Product[]> {
+		return from([this.products]);
+	}
+	saveOrder(order: Order): Observable<Order> {
+		console.log(JSON.stringify(order));
+		return from([order]);
+	}
+}
+
+src/app/model/order.repository.ts
+************************************
+import { Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+import { Order } from "./order.model";
+import { StaticDataSource } from "./static.datasource";
+
+@Injectable()
+export class OrderRepository {
+	private orders: Order[] = [];
+	
+	constructor(private dataSource: StaticDataSource) {}
+		getOrders(): Order[] {
+		return this.orders;
+	}
+	saveOrder(order: Order): Observable<Order> {
+		return this.dataSource.saveOrder(order);
+	}
+}
+Updating the Feature Module
+******************************
+src/app/model/model.module.ts
+*****************************
+......
+......
+import { Order } from "./order.model";
+import { OrderRepository } from "./order.repository";
+......
+providers: [ProductRepository, StaticDataSource, Cart, Order, OrderRepository]
+.............
+
+Collecting the Order Details
+-------------------------------
+src/app/store/checkout.component.ts
+************************************
+import { Component } from "@angular/core";
+import { NgForm } from "@angular/forms";
+import { OrderRepository } from "../model/order.repository";
+import { Order } from "../model/order.model";
+
+@Component({
+	templateUrl: "checkout.component.html",
+	styleUrls: ["checkout.component.css"]
+})
+export class CheckoutComponent {
+	orderSent: boolean = false;
+	submitted: boolean = false;
+	
+	constructor(public repository: OrderRepository, public order: Order) {}
+	
+	submitOrder(form: NgForm) {
+		this.submitted = true;
+		if (form.valid) {
+			this.repository.saveOrder(this.order).subscribe(order => {
+				this.order.clear();
+				this.orderSent = true;
+				this.submitted = false;
+			});
+		}
+	}
+}
+
+src/app/store/checkout.component.css
+*************************************
+input.ng-dirty.ng-invalid { border: 2px solid #ff0000 }
+input.ng-dirty.ng-valid { border: 2px solid #6bc502 }
+
+src/app/store/checkout.component.html
+*************************************
+<div class="container-fluid">
+	<div class="row">
+		<div class="col bg-dark text-white">
+			<a class="navbar-brand">SPORTS STORE</a>
+		</div>
+	</div>
+</div>
+<div *ngIf="orderSent" class="m-2 text-center">
+	<h2>Thanks!</h2>
+	<p>Thanks for placing your order.</p>
+	<p>We'll ship your goods as soon as possible.</p>
+	<button class="btn btn-primary" routerLink="/store">Return to Store</button>
+</div>
+<form *ngIf="!orderSent" #form="ngForm" novalidate (ngSubmit)="submitOrder(form)" class="m-2">
+	<div class="form-group">
+		<label>Name</label>
+		<input class="form-control" #name="ngModel" name="name"	[(ngModel)]="order.name" required />
+		<span *ngIf="submitted && name.invalid" class="text-danger">
+			Please enter your name
+		</span>
+	</div>
+	<div class="form-group">
+	<label>Address</label>
+		<input class="form-control" #address="ngModel" name="address" [(ngModel)]="order.address" required />
+		<span *ngIf="submitted && address.invalid" class="text-danger">
+			Please enter your address
+		</span>
+	</div>
+	<div class="form-group">
+		<label>City</label>
+		<input class="form-control" #city="ngModel" name="city"	[(ngModel)]="order.city" required />
+		<span *ngIf="submitted && city.invalid" class="text-danger">
+			Please enter your city
+		</span>
+	</div>
+	<div class="form-group">
+	<label>State</label>
+		<input class="form-control" #state="ngModel" name="state" [(ngModel)]="order.state" required />
+		<span *ngIf="submitted && state.invalid" class="text-danger">
+			Please enter your state
+		</span>
+	</div>
+	<div class="form-group">
+	<label>Zip/Postal Code</label>
+		<input class="form-control" #zip="ngModel" name="zip" [(ngModel)]="order.zip" required />
+		<span *ngIf="submitted && zip.invalid" class="text-danger">
+			Please enter your zip/postal code
+		</span>
+	</div>
+	<div class="form-group">
+		<label>Country</label>
+		<input class="form-control" #country="ngModel" name="country" [(ngModel)]="order.country" required />
+		<span *ngIf="submitted && country.invalid" class="text-danger">
+			Please enter your country
+		</span>
+	</div>
+	<div class="text-center">
+		<button class="btn btn-secondary m-1" routerLink="/cart">Back</button>
+		<button class="btn btn-primary m-1" type="submit">Complete Order</button>
+	</div>
+</form>
+
+Using the RESTful Web Service
+================================
+src/app/model/rest.datasource.ts
+********************************
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { Product } from "./product.model";
+import { Cart } from "./cart.model";
+import { Order } from "./order.model";
+
+const PROTOCOL = "http";
+const PORT = 3500;
+
+@Injectable()
+export class RestDataSource {
+	
+	baseUrl: string;
+	
+	constructor(private http: HttpClient) {
+		this.baseUrl = `${PROTOCOL}://${location.hostname}:${PORT}/`;
+	}
+	
+	getProducts(): Observable<Product[]> {
+		return this.http.get<Product[]>(this.baseUrl + "products");
+	}
+	
+	saveOrder(order: Order): Observable<Order> {
+		return this.http.post<Order>(this.baseUrl + "orders", order);
+	}
+}
+
+HttpClient: built-in service provides by Angular to make HTTP requests.
+-----------
+
+Applying the Data Source
+---------------------------
+src/app/model/ model.module.ts (Changing the Service Configuration)
+*******************************
+
+.........
+import { HttpClientModule } from "@angular/common/http";
+........
+........
+imports: [HttpClientModule],
+providers: [ProductRepository, Cart, Order, OrderRepository, { provide: StaticDataSource, useClass: RestDataSource }]
+.......
+.......
+
+----------------------------------------------------------
+|				SportsStore: Administration				 |
+----------------------------------------------------------			
+
+Preparing the Example Application
+=================================
+npm run json
+
+ng serve --port 3000 --open
+
+Creating the module
+---------------------
+Create folder src/app/admin
+
+src/app/admin/auth.component.ts
+*******************************
+import { Component } from "@angular/core";
+import { NgForm } from "@angular/forms";
+import { Router } from "@angular/router";
+
+@Component({
+	templateUrl: "auth.component.html"
+})
+export class AuthComponent {
+	
+	public username: string;
+	public password: string;
+	public errorMessage: string;
+	
+	constructor(private router: Router) {}	
+	
+	authenticate(form: NgForm) {
+		if (form.valid) {
+			// perform authentication
+			this.router.navigateByUrl("/admin/main");
+		} else {
+			this.errorMessage = "Form Data Invalid";
+		}
+	}
+}
+
+src/app/admin/auth.component.html
+***********************************
+<div class="bg-info p-2 text-center text-white">
+	<h3>SportsStore Admin</h3>
+</div>
+
+<div class="bg-danger mt-2 p-2 text-center text-white" *ngIf="errorMessage != null">
+	{{errorMessage}}
+</div>
+
+<div class="p-2">
+	<form novalidate #form="ngForm" (ngSubmit)="authenticate(form)">
+		<div class="form-group">
+			<label>Name</label>
+			<input class="form-control" name="username" [(ngModel)]="username" required />
+		</div>
+		<div class="form-group">
+			<label>Password</label>
+			<input class="form-control" type="password" name="password"	[(ngModel)]="password" required />
+		</div>
+		<div class="text-center">
+			<button class="btn btn-secondary m-1" routerLink="/">Go back</button>
+			<button class="btn btn-primary m-1" type="submit">Log In</button>
+		</div>
+	</form>
+</div>
+
+/app/admin/admin.component.ts
+******************************
+import { Component } from "@angular/core";
+@Component({
+	templateUrl: "admin.component.html"
+})
+export class AdminComponent {}
+
+src/app/admin/admin.component.html
+**********************************
+<div class="bg-info p-2 text-white">
+	<h3>Placeholder for Admin Features</h3>
+</div>
+
+src/app/admin/admin.module.ts
+*****************************
+import { NgModule } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { RouterModule } from "@angular/router";
+import { AuthComponent } from "./auth.component";
+import { AdminComponent } from "./admin.component";
+
+let routing = RouterModule.forChild([
+	{ path: "auth", component: AuthComponent },
+	{ path: "main", component: AdminComponent },
+	{ path: "**", redirectTo: "auth" }
+]);
+
+@NgModule({
+	imports: [CommonModule, FormsModule, routing],
+	declarations: [AuthComponent, AdminComponent]
+})
+export class AdminModule { }
+
+Configuring the URL Routing System
+-----------------------------------
+src/app/app.module.ts
+**********************
+...........
+...........
+{
+	path: "admin",
+	loadChildren: "./admin/admin.module#AdminModule",
+	canActivate: [StoreFirstGuard]
+},
+..........
+..........
+Navigating to the Administration URL
+--------------------------------------
+src/app/store/store.component.html
+**********************************
+<div class="col-3 p-2">
+	<button class="btn btn-block btn-outline-primary" (click)="changeCategory()">
+		Home
+	</button>
+	<button *ngFor="let cat of categories"
+		class="btn btn-outline-primary btn-block"
+		[class.active]="cat == selectedCategory" (click)="changeCategory(cat)">
+		{{cat}}
+	</button>
+	<button class="btn btn-block btn-danger m-t-3" routerLink="/admin">
+		Admin
+	</button>
+</div>
+
+Implementing Authentication
+===============================
+Understanding the Authentication System
+----------------------------------------
+username : admin
+password : secret
+
+Extending the Data Source
+----------------------------
+src/app/model/rest.datasource.ts
+**********************************
+.......
+import { map } from "rxjs/operators";
+.......
+baseUrl: string;
+auth_token: string;
+........
+........
+authenticate(user: string, pass: string): Observable<boolean> {
+	return this.http.post<any>(this.baseUrl + "login", {
+		name: user, password: pass
+	}).pipe(map(response => {
+		this.auth_token = response.success ? response.token : null;
+		return response.success;
+	}));
+}
+Creating the Authentication Service
+--------------------------------------
+src/app/model/auth.service.ts
+*******************************
+import { Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+import { RestDataSource } from "./rest.datasource";
+
+@Injectable()
+export class AuthService {
+	
+	constructor(private datasource: RestDataSource) {}
+	
+	authenticate(username: string, password: string): Observable<boolean> {
+		return this.datasource.authenticate(username, password);
+	}
+	
+	get authenticated(): boolean {
+		return this.datasource.auth_token != null;
+	}
+	
+	clear() {
+		this.datasource.auth_token = null;
+	}
+}
+
+src/app/model/model.module.ts
+*****************************
+.........
+import { AuthService } from "./auth.service";
+.........
+providers: [ProductRepository, Cart, Order, OrderRepository,{ provide: StaticDataSource, useClass: RestDataSource }, RestDataSource, AuthService]
+.....
+
+Enabling Authentication
+------------------------------
+.........
+import { AuthService } from "../model/auth.service";
+..........
+..........
+constructor(private router: Router, private auth: AuthService) { }
+.........
+.........
+authenticate(form: NgForm) {
+	if (form.valid) {
+		this.auth.authenticate(this.username, this.password).subscribe(response => {
+			if (response) {
+				this.router.navigateByUrl("/admin/main");
+			}
+			this.errorMessage = "Authentication Failed";
+		})
+	} else {
+		this.errorMessage = "Form Data Invalid";
+	}
+}
+src/app/admin/auth.guard.ts (Preventing navigation directly to the administration features)
+****************************
+import { Injectable } from "@angular/core";
+import { ActivatedRouteSnapshot, RouterStateSnapshot, Router } from "@angular/router";
+import { AuthService } from "../model/auth.service";
+
+@Injectable()
+export class AuthGuard {
+	
+	constructor(private router: Router, private auth: AuthService) { }
+
+	canActivate(route: ActivatedRouteSnapshot,state: RouterStateSnapshot): boolean {
+		if (!this.auth.authenticated) {
+			this.router.navigateByUrl("/admin/auth");
+			return false;
+		}
+		return true;
+	}
+}
+
+src/app/admin/admin.module.ts
+******************************
+..............
+import { AuthGuard } from "./auth.guard";
+..............
+let routing = RouterModule.forChild([
+	...........
+	{ path: "main", component: AdminComponent, canActivate: [AuthGuard] },
+	.........
+]);
+@NgModule({
+	.............
+	providers: [AuthGuard],
+	..............
+})
+export class AdminModule {}
+
+Extending the Data Source and Repositories
+===========================================
+src/app/model/rest.datasource.ts
+**********************************
+..............
+import { HttpHeaders } from '@angular/common/http';
+............
+............
+@Injectable()
+export class RestDataSource {
+	......
+	.......
+	saveProduct(product: Product): Observable<Product> {
+		return this.http.post<Product>(this.baseUrl + "products",
+		product, this.getOptions());
+	}
+	updateProduct(product): Observable<Product> {
+		return this.http.put<Product>(`${this.baseUrl}products/${product.id}`,
+		product, this.getOptions());
+	}
+	deleteProduct(id: number): Observable<Product> {
+		return this.http.delete<Product>(`${this.baseUrl}products/${id}`,
+		this.getOptions());
+	}
+	getOrders(): Observable<Order[]> {
+		return this.http.get<Order[]>(this.baseUrl + "orders", this.getOptions());
+	}
+	deleteOrder(id: number): Observable<Order> {
+		return this.http.delete<Order>(`${this.baseUrl}orders/${id}`,
+		this.getOptions());
+	}
+	updateOrder(order: Order): Observable<Order> {
+		return this.http.put<Order>(`${this.baseUrl}orders/${order.id}`,
+		this.getOptions());
+	}
+	private getOptions() {
+		return {
+			headers: new HttpHeaders({
+				"Authorization": `Bearer<${this.auth_token}>`
+			})
+		}
+	}		
+}
+
+src/app/model/product.repository.ts
+************************************
+............
+//import { StaticDataSource } from "./static.datasource";
+import { RestDataSource } from "./rest.datasource";
+............
+@Injectable()
+export class ProductRepository {
+	............
+	constructor(private dataSource: RestDataSource) {
+	........
+	}
+	
+	saveProduct(product: Product) {
+		if (product.id == null || product.id == 0) {
+			this.dataSource.saveProduct(product).subscribe(p => this.products.push(p));
+		} else {
+			this.dataSource.updateProduct(product).subscribe(p => {
+				this.products.splice(this.products.
+				findIndex(p => p.id == product.id), 1, product);
+			});
+		}
+	}
+	deleteProduct(id: number) {
+		this.dataSource.deleteProduct(id).subscribe(p => {
+			this.products.splice(this.products.
+			findIndex(p => p.id == id), 1);
+		})
+	}
+	
+}
+src/app/model/order.repository.ts
+**********************************
+..........
+//import { StaticDataSource } from "./static.datasource";
+import { RestDataSource } from "./rest.datasource";
+.........
+.........
+@Injectable()
+export class OrderRepository {
+	...........
+	private loaded: boolean = false;
+	constructor(private dataSource: RestDataSource) { }
+	
+	loadOrders() {
+		this.loaded = true;
+		this.dataSource.getOrders().subscribe(orders => this.orders = orders);
+	}
+	
+	getOrders(): Order[] {
+		if (!this.loaded) {
+			this.loadOrders();
+		}
+		return this.orders;
+	}
+	........
+	........
+	updateOrder(order: Order) {
+		this.dataSource.updateOrder(order).subscribe(order => {
+			this.orders.splice(this.orders.	findIndex(o => o.id == order.id), 1, order);
+		});
+	}
+	deleteOrder(id: number) {
+		this.dataSource.deleteOrder(id).subscribe(order => {
+			this.orders.splice(this.orders.findIndex(o => id == o.id));
+		});
+	}
+}
+
+Creating the Administration Feature Structure
+=============================================
+/admin/main/products 			Navigating to this URL will display all the products in a table, along
+								with buttons that allow an existing product to be edited or deleted and
+								a new product to be created.
+							
+/admin/main/products/create 	Navigating to this URL will present the user with an empty editor for
+								creating a new product
+								
+/admin/main/products/edit/1 	Navigating to this URL will present the user with a populated editor for
+								editing an existing product.
+								
+.
+/admin/main/orders 				Navigating to this URL will present the user with all the orders in a
+								table, along with buttons to mark an order shipped and to cancel an
+								order by deleting it
+
+Creating the Placeholder Components
+---------------------------------------
+src/app/admin/productTable.component.ts
+***************************************
+@Component({
+template: `<div class="bg-info p-2 text-white">
+			<h3>Product Table Placeholder</h3>
+			</div>`
+})
+export class ProductTableComponent {}		
+
+src/app/admin/productEditor.component.ts
+*****************************************
+import { Component } from "@angular/core";
+@Component({
+template: `<div class="bg-warning p-2 text-white">
+			<h3>Product Editor Placeholder</h3>
+			</div>`
+})
+export class ProductEditorComponent { }
+
+src/app/admin/orderTable.component.ts
+**************************************
+import { Component } from "@angular/core";
+@Component({
+template: `<div class="bg-primary p-2 text-white">
+			<h3>Order Table Placeholder</h3>
+			</div>`
+})
+export class OrderTableComponent { }
+
+Preparing the Common Content and the Feature Module
+----------------------------------------------------
+src/app/admin/admin.component.html
+************************************
+<div class="container-fluid">
+	<div class="row">
+		<div class="col bg-dark text-white">
+			<a class="navbar-brand">SPORTS STORE</a>
+		</div>
+	</div>
+	<div class="row mt-2">
+		<div class="col-3">
+			<button class="btn btn-outline-info btn-block"
+				routerLink="/admin/main/products"
+				routerLinkActive="active">
+				Products
+			</button>
+			<button class="btn btn-outline-info btn-block"
+				routerLink="/admin/main/orders"
+				routerLinkActive="active">
+				Orders
+			</button>
+			<button class="btn btn-outline-danger btn-block" (click)="logout()">
+			Logout
+			</button>
+		</div>
+		<div class="col-9">
+			<router-outlet></router-outlet>
+		</div>
+	</div>
+</div>
+
+src/app/admin/admin.component.ts (implementing logout)
+*********************************
+.........
+.........
+import { Router } from "@angular/router";
+import { AuthService } from "../model/auth.service";
+........
+........
+constructor(private auth: AuthService, private router: Router) { }
+
+logout() {
+	this.auth.clear();
+	this.router.navigateByUrl("/");
+}
+
+src/app/admin/admin.module.ts
+*******************************
+.......
+import { ProductTableComponent } from "./productTable.component";
+import { ProductEditorComponent } from "./productEditor.component";
+import { OrderTableComponent } from "./orderTable.component";
+.......
+let routing = RouterModule.forChild([
+	{ path: "auth", component: AuthComponent },
+	{
+		path: "main", component: AdminComponent, canActivate: [AuthGuard],
+		children: [
+			{ path: "products/:mode/:id", component: ProductEditorComponent },
+			{ path: "products/:mode", component: ProductEditorComponent },
+			{ path: "products", component: ProductTableComponent },
+			{ path: "orders", component: OrderTableComponent },
+			{ path: "**", redirectTo: "products" }
+		]
+	},
+	{ path: "**", redirectTo: "auth" }
+]);
+.....
+.....
+declarations: [AuthComponent, AdminComponent, ProductTableComponent, ProductEditorComponent, OrderTableComponent]
+......
+......
+
+
+NB: Individual routes can be extended using the children property
+
+Implementing the product feature
+------------------------------------
+src/app/admin/productTable.component.ts
+****************************************
+
+import { Component } from "@angular/core";
+import { Product } from "../model/product.model";
+import { ProductRepository } from "../model/product.repository";
+@Component({
+	templateUrl: "productTable.component.html"
+})
+export class ProductTableComponent {
+	constructor(private repository: ProductRepository) { }
+	getProducts(): Product[] {
+		return this.repository.getProducts();
+	}
+	deleteProduct(id: number) {
+		this.repository.deleteProduct(id);
+	}
+}
+
+src/app/admin/productTable.component.html
+*******************************************
+<table class="table table-sm table-striped">
+	<thead>
+		<tr>
+			<th>ID</th><th>Name</th><th>Category</th><th>Price</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr *ngFor="let p of getProducts()">
+			<td>{{p.id}}</td>
+			<td>{{p.name}}</td>
+			<td>{{p.category}}</td>
+			<td>{{p.price | currency:"USD":"symbol":"2.2-2"}}</td>
+			<td>
+				<button class="btn btn-sm btn-warning"
+					[routerLink]="['/admin/main/products/edit', p.id]">
+					Edit
+				</button>
+				<button class="btn btn-sm btn-danger" (click)="deleteProduct(p.id)">
+					Delete
+				</button>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<button class="btn btn-primary" routerLink="/admin/main/products/create">
+	Create New Product
+</button>

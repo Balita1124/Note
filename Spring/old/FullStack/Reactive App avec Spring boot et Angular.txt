@@ -1,0 +1,113 @@
+Source: https://medium.com/@hantsy/build-a-reactive-application-with-spring-boot-2-0-and-angular-de0ee5837fed
+
+Dans ce tuto nous allons juste creer un simple blog. qui permet
+	- Un utilisateur peut faire un login et un logout
+	- Un utilisateur connecté peut creer un post
+	- Un utilisatuer connecté peut update un poste
+	- Seulement les utilisateurs avec le role ADMIN peuvent supprimer un post
+	- Tous les utilisateurs peuvent voir la liste et les details des post
+	- Un utilisateur connecté peut commenter un post
+
+Le backend sera mis en place a partir de Spring 5 reactive Stack, composé de :
+	- Spring boot 2.0, en ce moment la derniere version est 2.0.0.M7
+	- Spring data MongoDb
+	- Spring Session pour ajouter le support pour WebSession
+	- Spring security 5
+	
+le front end est un SPA réalisé avec Angular : le code source est ici: https://github.com/hantsy/angular-spring-reactive-sample
+
+Pre-requis:
+	- Oracle Java 8 JDK
+	- Apsche Maven ou Gradle
+	- IDE (Eclipse ou STS ou IntelliJ, Netbeans, ...)
+
+1 - Generation du projet sur start.spring.io
+	importer le projet dans STS
+2 - Produire le restFull Api
+	Developper Post
+	
+	- Creer un POJO class Post
+	
+		@Document
+		@Data
+		@ToString
+		@Builder
+		@NoArgsConstructor
+		@AllArgsConstructor
+		class Post implements Serializable {    @Id
+			private String id;    @NotBlank
+			private String title;    @NotBlank
+			private String content;
+		}
+	- Creer un interface PostRepository
+	
+		interface PostRepository extends ReactiveMongoRepository<Post, String> {
+		}
+	- Creer le controller PostController
+	
+		@RestController()
+		@RequestMapping(value = "/posts")
+		class PostController {    
+			private final PostRepository posts;    
+			
+			public PostController(PostRepository posts) {
+				this.posts = posts;
+			}    
+			@GetMapping("")
+			public Flux<Post> all() {
+				return this.posts.findAll();
+			}    
+			@PostMapping("")
+			public Mono<Post> create(@RequestBody Post post) {
+				return this.posts.save(post);
+			}    
+			@GetMapping("/{id}")
+			public Mono<Post> get(@PathVariable("id") String id) {
+				return this.posts.findById(id);
+			}    
+			@PutMapping("/{id}")
+			public Mono<Post> update(@PathVariable("id") String id, @RequestBody Post post) {
+				return this.posts.findById(id)
+						.map(p -> {
+							p.setTitle(post.getTitle());
+							p.setContent(post.getContent());                    
+							return p;
+						})
+						.flatMap(p -> this.posts.save(p));
+			}    
+			@DeleteMapping("/{id}")
+			@ResponseStatus(NO_CONTENT)
+			public Mono<Void> delete(@PathVariable("id") String id) {
+				return this.posts.deleteById(id);
+			}
+		}
+		
+	- Creer un CommandLineRunner pour inserer des données test
+	
+		@Component
+		@Slf4j
+		class DataInitializer implements CommandLineRunner {    
+			private final PostRepository posts;    
+			public DataInitializer(PostRepository posts) {
+				this.posts = posts;
+			}    
+			@Override
+			public void run(String[] args) {
+				log.info("start data initialization  ...");
+				this.posts
+						.deleteAll()
+						.thenMany(
+								Flux
+										.just("Post one", "Post two")
+										.flatMap(
+												title -> this.posts.save(Post.builder().title(title).content("content of " + title).build())
+										)
+						)
+						.log()
+						.subscribe(
+								null,
+								null,
+								() -> log.info("done initialization...")
+						);    
+			}
+		}

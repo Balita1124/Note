@@ -1,0 +1,20 @@
+1 - Installing node
+-----------------------------
+node : created in 2009
+
+2 - Installing the angular-cli package
+---------------------------------------
+Tools to create and mange angular project during development.
+# npm install --global @angular/cli@6.0.8
+
+3 - Installing git
+
+4 - installing an Editor
+	- Sublime Text
+	- Atom
+	- Brackets
+	- WebStorm
+	- Visual Studio Code
+	- Visual Studio
+	
+5 - Installing a Browser

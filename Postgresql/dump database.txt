@@ -1,7 +1,10 @@
 Avec pg_restore
 ------------------------------
-pg_restore -U BORA -d ANJACDB -1 < C:\Work\ANJACDB\20200224_qualif_exp_blob_ANJACDB_tk98520.dump
+pg_restore -U BORA -d ECTDB -1 < C:\Work\BORADB\tckt124780_dump_MIG_BORA_20200528_ECTDB.dump
 
 avec psql
 ---------------------------------------
-psql BOUYGUESTELECOMDB < C:\Work\BORADB\20200110_qualif_exp_BOUYGUESTELECOMDB.dump BOUYGUESTELECOMDB
+psql LEFRANCDB < C:\Work\BORADB\tckt124780_dump_QUALIF_BORA_20200528_LEFRANCDB.dump LEFRANCDB
+
+
+pg_dump -h 10.1.23.49 -p 5432 POLECSIDB > C:\Work\BORADB\tckt124780_dump_MIG_BORA_20200615_POLECSIDB.dump

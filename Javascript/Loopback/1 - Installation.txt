@@ -1,0 +1,13 @@
+Pre-requis
+---------------
+
+Installer Node.js version 10+
+
+Installation de Loopback 4 cli
+-------------------------------
+
+npm i -g @loopback/cli
+
+Creation d'un nouveau projet
+------------------------------
+lb4 app

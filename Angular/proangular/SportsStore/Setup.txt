@@ -1118,7 +1118,8 @@ export class OrderRepository {
 	private orders: Order[] = [];
 	
 	constructor(private dataSource: StaticDataSource) {}
-		getOrders(): Order[] {
+	
+	getOrders(): Order[] {
 		return this.orders;
 	}
 	saveOrder(order: Order): Observable<Order> {

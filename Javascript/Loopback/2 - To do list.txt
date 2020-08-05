@@ -1,0 +1,17 @@
+Installation de loopback cli
+------------------------------
+npm i -g @loopback/cli
+
+creation du scaffold de l'application
+----------------------------------------
+lb4 app
+
+Ajouter le model todo
+--------------------------
+lb4 model
+
+Ajouter un datasource
+-----------------------
+lb4 datasource
+
+

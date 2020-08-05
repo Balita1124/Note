@@ -1,0 +1,55 @@
+Initialisation d'un projet npm
+--------------------------------
+mkdir project-sample
+cd project-sample
+npm init
+
+NB : Accepter toutes les valeurs par defaut
+
+Installation de typescript
+-------------------------------------
+npm install -save-dev typescript
+
+Vous pouvez tester sur la ligne de commande tsc
+
+Initialiser le projet aussi en tant que typescript
+----------------------------------------------------
+npx tsc -init
+
+NB : apres ca, vous aurez 
+	- package,json
+	- package-lock.json
+	- tsconfig,json
+	
+Modification de tsconfig.json
+---------------------------------------
+- Decommenter "outDir" et met sa valeur a "./dist"
+- Apres l'element "compilerOptions", ajouter "include"
+	Ex: 
+		{
+			"compilerOptions": {
+			...lots of compiler options...
+			},
+			"include": [ "src/**/*" ]
+		}
+		
+NB : Cela assure que c'est tsc seulement qui compile les fichiers dans le repertoire src
+
+- Decommenter aussi l'option "sourceMap" et mettez sa valeur a true
+NB : Cela facilite le debug
+
+Source File Rundown
+---------------------------------------
+- Creer le repertoire src
+- src/main.ts : le principal point d'entré et ce dans ce fichier que nous allons definir les fonctions qui constituera les API
+- ServerInfo.ts : fichier de configuration qui offre les details sur l'IMAP et SMTP
+- IMAP.ts : Code qui communique avec un IMAP server pour lister les messages
+- SMTP.ts : Code qui communique avec un SMTP server pour envoyer les messages
+- contacts.ts : Code qui permet de gerer les contacts (CRUD)
+
+Ajouter les modules nodes
+----------------------------------------------
+
+
+
+
